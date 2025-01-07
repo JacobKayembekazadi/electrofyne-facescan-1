@@ -49,8 +49,8 @@ const mockUser = {
 
 export default function Profile() {
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="grid md:grid-cols-2 gap-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <div className="grid gap-8 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
@@ -65,33 +65,41 @@ export default function Profile() {
                 <label className="text-sm font-medium">Email</label>
                 <p className="text-lg">{mockUser.email}</p>
               </div>
-              <Button>Edit Profile</Button>
+              <Button className="w-full sm:w-auto">Edit Profile</Button>
             </div>
           </CardContent>
         </Card>
 
-        <Leaderboard userId={mockUser.id} />
+        <div className="order-1 md:order-none">
+          <Leaderboard userId={mockUser.id} />
+        </div>
       </div>
 
       {/* Routine Progress Animation */}
-      <RoutineProgressAnimation 
-        morningSteps={mockUser.routineProgress.morningSteps}
-        eveningSteps={mockUser.routineProgress.eveningSteps}
-        streak={mockUser.routineProgress.streak}
-        lastCompletedAt={mockUser.routineProgress.lastCompletedAt}
-      />
+      <div className="rounded-lg overflow-hidden">
+        <RoutineProgressAnimation 
+          morningSteps={mockUser.routineProgress.morningSteps}
+          eveningSteps={mockUser.routineProgress.eveningSteps}
+          streak={mockUser.routineProgress.streak}
+          lastCompletedAt={mockUser.routineProgress.lastCompletedAt}
+        />
+      </div>
 
       {/* Progress Timeline */}
-      <SkinProgressTimeline userId={mockUser.id} />
+      <div className="rounded-lg overflow-hidden">
+        <SkinProgressTimeline userId={mockUser.id} />
+      </div>
 
-      {/* Health Dashboard */}
-      <HealthDashboard userId={mockUser.id} />
-
-      <Challenges userId={mockUser.id} />
-
-      <Achievements userId={mockUser.id} />
-
-      <ProgressDashboard userId={mockUser.id} />
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-8">
+          <HealthDashboard userId={mockUser.id} />
+          <Challenges userId={mockUser.id} />
+        </div>
+        <div className="space-y-8">
+          <Achievements userId={mockUser.id} />
+          <ProgressDashboard userId={mockUser.id} />
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
@@ -102,7 +110,7 @@ export default function Profile() {
             {mockUser.analysisHistory.map((analysis) => (
               <Card key={analysis.id}>
                 <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                     <div>
                       <p className="font-medium">Analysis on {analysis.date}</p>
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -116,7 +124,7 @@ export default function Profile() {
                         ))}
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
                       View Details
                     </Button>
                   </div>
@@ -124,7 +132,7 @@ export default function Profile() {
                     <p className="text-sm font-medium mb-2">Recommended Products:</p>
                     <ul className="list-disc list-inside text-sm text-muted-foreground">
                       {analysis.recommendations.map((product) => (
-                        <li key={product}>{product}</li>
+                        <li key={product} className="break-words">{product}</li>
                       ))}
                     </ul>
                   </div>
