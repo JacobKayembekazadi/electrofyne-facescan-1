@@ -6,6 +6,7 @@ import Navigation from "./components/Navigation";
 import Home from "./pages/Home";
 import Analysis from "./pages/Analysis";
 import Profile from "./pages/Profile";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" component={Home} />
             <Route path="/analysis" component={Analysis} />
             <Route path="/profile" component={Profile} />
+            <Route path="/about" component={About} />
           </Switch>
         </main>
         <Toaster />

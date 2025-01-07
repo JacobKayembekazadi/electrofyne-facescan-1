@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import ImageUpload from "../components/ImageUpload";
 import AnalysisResults from "../components/AnalysisResults";
@@ -51,6 +51,16 @@ export default function Analysis() {
     toast({
       title: `Your Skin Type: ${result.type}`,
       description: result.description,
+      duration: 5000,
+    });
+  };
+
+  const handleSkipQuiz = () => {
+    setStage("upload");
+    toast({
+      title: "Quiz Skipped",
+      description: "You can always take the skin type quiz later from your profile.",
+      duration: 3000,
     });
   };
 
@@ -172,7 +182,7 @@ export default function Analysis() {
       <div className="grid gap-8">
         <Card className="p-6">
           {stage === "quiz" && (
-            <SkinTypeQuiz onComplete={handleQuizComplete} />
+            <SkinTypeQuiz onComplete={handleQuizComplete} onSkip={handleSkipQuiz} />
           )}
 
           {stage === "upload" && (

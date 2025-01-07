@@ -110,9 +110,10 @@ interface SkinTypeQuizProps {
     description: string;
     recommendations: string[];
   }) => void;
+  onSkip?: () => void;
 }
 
-export default function SkinTypeQuiz({ onComplete }: SkinTypeQuizProps) {
+export default function SkinTypeQuiz({ onComplete, onSkip }: SkinTypeQuizProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState(false);
@@ -135,7 +136,7 @@ export default function SkinTypeQuiz({ onComplete }: SkinTypeQuizProps) {
     Object.entries(answers).forEach(([questionId, answerId]) => {
       const question = quizQuestions.find(q => q.id === questionId);
       const option = question?.options.find(o => o.id === answerId);
-      
+
       if (option) {
         Object.entries(option.score).forEach(([type, score]) => {
           scores[type as keyof typeof scores] += score;
@@ -222,7 +223,7 @@ export default function SkinTypeQuiz({ onComplete }: SkinTypeQuizProps) {
       </CardHeader>
       <CardContent>
         <Progress value={progress} className="mb-8" />
-        
+
         <AnimatePresence mode="wait">
           {!showResult ? (
             <motion.div
@@ -236,7 +237,7 @@ export default function SkinTypeQuiz({ onComplete }: SkinTypeQuizProps) {
                 <h3 className="text-lg font-medium">
                   {quizQuestions[currentQuestion].question}
                 </h3>
-                
+
                 <RadioGroup
                   onValueChange={(value) => 
                     handleAnswer(quizQuestions[currentQuestion].id, value)
@@ -262,13 +263,22 @@ export default function SkinTypeQuiz({ onComplete }: SkinTypeQuizProps) {
                   </div>
                 </RadioGroup>
 
-                <Button
-                  onClick={handleNext}
-                  disabled={!answers[quizQuestions[currentQuestion].id]}
-                  className="w-full"
-                >
-                  {currentQuestion === quizQuestions.length - 1 ? "Complete Quiz" : "Next Question"}
-                </Button>
+                <div className="flex justify-between gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={onSkip}
+                    className="w-full"
+                  >
+                    Skip Quiz
+                  </Button>
+                  <Button
+                    onClick={handleNext}
+                    disabled={!answers[quizQuestions[currentQuestion].id]}
+                    className="w-full"
+                  >
+                    {currentQuestion === quizQuestions.length - 1 ? "Complete Quiz" : "Next Question"}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           ) : (
