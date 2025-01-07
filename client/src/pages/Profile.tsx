@@ -6,6 +6,7 @@ import Leaderboard from "../components/Leaderboard";
 import Challenges from "../components/Challenges";
 import HealthDashboard from "../components/HealthDashboard";
 import SkinProgressTimeline from "../components/SkinProgressTimeline";
+import RoutineProgressAnimation from "../components/RoutineProgressAnimation";
 
 // Mock user data
 const mockUser = {
@@ -26,6 +27,24 @@ const mockUser = {
       recommendations: ["Gentle Cleanser", "Spot Treatment"],
     },
   ],
+  // Mock routine data
+  routineProgress: {
+    morningSteps: [
+      { id: "cleanse-am", name: "Cleanse", completed: true, timeOfDay: "morning" as const, completedAt: new Date() },
+      { id: "tone-am", name: "Tone", completed: false, timeOfDay: "morning" as const },
+      { id: "serum-am", name: "Vitamin C Serum", completed: false, timeOfDay: "morning" as const },
+      { id: "moisturize-am", name: "Moisturize", completed: false, timeOfDay: "morning" as const },
+      { id: "spf", name: "Sunscreen", completed: false, timeOfDay: "morning" as const }
+    ],
+    eveningSteps: [
+      { id: "cleanse-pm", name: "Double Cleanse", completed: true, timeOfDay: "evening" as const, completedAt: new Date() },
+      { id: "tone-pm", name: "Tone", completed: true, timeOfDay: "evening" as const, completedAt: new Date() },
+      { id: "treat", name: "Treatment", completed: false, timeOfDay: "evening" as const },
+      { id: "moisturize-pm", name: "Night Cream", completed: false, timeOfDay: "evening" as const }
+    ],
+    streak: 5,
+    lastCompletedAt: new Date()
+  }
 };
 
 export default function Profile() {
@@ -53,6 +72,14 @@ export default function Profile() {
 
         <Leaderboard userId={mockUser.id} />
       </div>
+
+      {/* Routine Progress Animation */}
+      <RoutineProgressAnimation 
+        morningSteps={mockUser.routineProgress.morningSteps}
+        eveningSteps={mockUser.routineProgress.eveningSteps}
+        streak={mockUser.routineProgress.streak}
+        lastCompletedAt={mockUser.routineProgress.lastCompletedAt}
+      />
 
       {/* Progress Timeline */}
       <SkinProgressTimeline userId={mockUser.id} />
