@@ -5,6 +5,7 @@ import Achievements from "../components/Achievements";
 import Leaderboard from "../components/Leaderboard";
 import Challenges from "../components/Challenges";
 import HealthDashboard from "../components/HealthDashboard";
+import SkinProgressTimeline from "../components/SkinProgressTimeline";
 
 // Mock user data
 const mockUser = {
@@ -52,6 +53,9 @@ export default function Profile() {
 
         <Leaderboard userId={mockUser.id} />
       </div>
+
+      {/* Progress Timeline */}
+      <SkinProgressTimeline userId={mockUser.id} />
 
       {/* Health Dashboard */}
       <HealthDashboard userId={mockUser.id} />
