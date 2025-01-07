@@ -8,6 +8,9 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   totalPoints: integer("total_points").default(0).notNull(),
   level: integer("level").default(1).notNull(),
+  currentStreak: integer("current_streak").default(0).notNull(),
+  longestStreak: integer("longest_streak").default(0).notNull(),
+  lastActivityDate: timestamp("last_activity_date"),
 });
 
 export const analyses = pgTable("analyses", {
@@ -47,6 +50,16 @@ export const userAchievements = pgTable("user_achievements", {
   unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
 });
 
+export const leaderboard = pgTable("leaderboard", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  score: integer("score").notNull(),
+  rank: integer("rank").notNull(),
+  weekNumber: integer("week_number").notNull(),
+  year: integer("year").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Type definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -58,6 +71,8 @@ export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = typeof achievements.$inferInsert;
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof userAchievements.$inferInsert;
+export type Leaderboard = typeof leaderboard.$inferSelect;
+export type InsertLeaderboard = typeof leaderboard.$inferInsert;
 
 // Schema validation
 export const insertUserSchema = createInsertSchema(users);
@@ -70,3 +85,5 @@ export const insertAchievementSchema = createInsertSchema(achievements);
 export const selectAchievementSchema = createSelectSchema(achievements);
 export const insertUserAchievementSchema = createInsertSchema(userAchievements);
 export const selectUserAchievementSchema = createSelectSchema(userAchievements);
+export const insertLeaderboardSchema = createInsertSchema(leaderboard);
+export const selectLeaderboardSchema = createSelectSchema(leaderboard);

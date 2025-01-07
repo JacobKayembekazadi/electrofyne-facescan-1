@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ProgressDashboard from "../components/ProgressDashboard";
 import Achievements from "../components/Achievements";
+import Leaderboard from "../components/Leaderboard";
 
 // Mock user data
 const mockUser = {
@@ -27,24 +28,28 @@ const mockUser = {
 export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Name</label>
-              <p className="text-lg">{mockUser.name}</p>
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <p className="text-lg">{mockUser.name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <p className="text-lg">{mockUser.email}</p>
+              </div>
+              <Button>Edit Profile</Button>
             </div>
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <p className="text-lg">{mockUser.email}</p>
-            </div>
-            <Button>Edit Profile</Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Leaderboard userId={mockUser.id} />
+      </div>
 
       <Achievements userId={mockUser.id} />
 
