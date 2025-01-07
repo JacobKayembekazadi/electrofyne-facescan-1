@@ -1,12 +1,15 @@
 import { UploadCloud, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import CameraPermissionDialog from "./CameraPermissionDialog";
 
 interface ImageUploadProps {
   onUpload: (file: File) => void;
 }
 
 export default function ImageUpload({ onUpload }: ImageUploadProps) {
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -14,13 +17,28 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [hasCamera, setHasCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [permissionState, setPermissionState] = useState<"prompt" | "granted" | "denied">("prompt");
 
   useEffect(() => {
-    // Check if device has camera
+    // Check if device has camera and get initial permission state
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const cameras = devices.filter(device => device.kind === 'videoinput');
         setHasCamera(cameras.length > 0);
+
+        // Check current permission state
+        if (navigator.permissions && navigator.permissions.query) {
+          navigator.permissions.query({ name: 'camera' as PermissionName })
+            .then(result => {
+              setPermissionState(result.state as "prompt" | "granted" | "denied");
+
+              // Listen for permission changes
+              result.addEventListener('change', () => {
+                setPermissionState(result.state as "prompt" | "granted" | "denied");
+              });
+            });
+        }
       })
       .catch(error => {
         console.error('Error checking camera:', error);
@@ -30,6 +48,16 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
 
   const startCamera = async () => {
     try {
+      if (permissionState === "denied") {
+        setShowPermissionDialog(true);
+        return;
+      }
+
+      if (permissionState === "prompt") {
+        setShowPermissionDialog(true);
+        return;
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
@@ -45,8 +73,41 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
-      // Fallback to file upload if camera access fails
-      setHasCamera(false);
+      toast({
+        title: "Camera Access Failed",
+        description: "Please check your camera permissions and try again.",
+        variant: "destructive",
+      });
+      setPermissionState("denied");
+      setShowPermissionDialog(true);
+    }
+  };
+
+  const requestCameraPermission = async () => {
+    setShowPermissionDialog(false);
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        setStream(mediaStream);
+        setIsCameraActive(true);
+        setPermissionState("granted");
+      }
+    } catch (error) {
+      console.error('Error requesting camera permission:', error);
+      setPermissionState("denied");
+      toast({
+        title: "Permission Denied",
+        description: "Camera access is required for skin analysis.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -63,16 +124,13 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
-      // Set canvas size to match video dimensions
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      // Draw video frame to canvas
       const context = canvas.getContext('2d');
       if (context) {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Convert canvas to blob
         canvas.toBlob((blob) => {
           if (blob) {
             const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
@@ -108,8 +166,14 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
         onChange={handleFileChange}
       />
 
-      {/* Hidden canvas for capturing photos */}
       <canvas ref={canvasRef} className="hidden" />
+
+      <CameraPermissionDialog
+        isOpen={showPermissionDialog}
+        onClose={() => setShowPermissionDialog(false)}
+        onRequestPermission={requestCameraPermission}
+        permissionState={permissionState}
+      />
 
       {!preview && !isCameraActive ? (
         <div className="space-y-6">
