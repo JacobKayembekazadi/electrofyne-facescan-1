@@ -4,8 +4,6 @@ import { useRef, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import CameraPermissionDialog from "./CameraPermissionDialog";
 import { motion, AnimatePresence } from "framer-motion";
-import * as tf from '@tensorflow/tfjs';
-import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 
 interface ImageUploadProps {
   onUpload: (file: File) => void;
@@ -22,11 +20,10 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [permissionState, setPermissionState] = useState<"prompt" | "granted" | "denied">("prompt");
-  const [faceDetected, setFaceDetected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check for camera availability and permissions
+    // Check for camera availability
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const cameras = devices.filter(device => device.kind === 'videoinput');
@@ -56,46 +53,6 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
     };
   }, []);
 
-  const initFaceDetection = async () => {
-    if (!videoRef.current) return;
-
-    try {
-      await tf.ready();
-      const model = await faceLandmarksDetection.createDetector(
-        faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
-        {
-          runtime: 'mediapipe',
-          solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
-          refineLandmarks: true,
-        }
-      );
-
-      const detectFace = async () => {
-        if (videoRef.current && model) {
-          try {
-            const predictions = await model.estimateFaces(videoRef.current);
-            setFaceDetected(predictions.length > 0);
-          } catch (error) {
-            console.error('Face detection error:', error);
-          }
-
-          if (isCameraActive) {
-            requestAnimationFrame(detectFace);
-          }
-        }
-      };
-
-      detectFace();
-    } catch (error) {
-      console.error('Error initializing face detection:', error);
-      toast({
-        title: "Face Detection Error",
-        description: "There was an error initializing face detection. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const startCamera = async () => {
     try {
       setIsLoading(true);
@@ -120,10 +77,16 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
+        videoRef.current.play().catch(error => {
+          console.error('Error playing video:', error);
+          toast({
+            title: "Camera Error",
+            description: "Could not start video stream. Please try again.",
+            variant: "destructive",
+          });
+        });
         setStream(mediaStream);
         setIsCameraActive(true);
-        await initFaceDetection();
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
@@ -150,19 +113,9 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
       setStream(null);
     }
     setIsCameraActive(false);
-    setFaceDetected(false);
   };
 
   const capturePhoto = () => {
-    if (!faceDetected) {
-      toast({
-        title: "No Face Detected",
-        description: "Please position your face within the frame.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -292,18 +245,6 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
                 muted
                 className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
               />
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="w-48 h-48 border-2 border-primary/50 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-              </div>
-              {faceDetected && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="absolute top-4 left-4 bg-green-500/90 text-white px-2 py-1 rounded text-sm"
-                >
-                  Face Detected
-                </motion.div>
-              )}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -313,7 +254,6 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
                 <Button
                   onClick={capturePhoto}
                   className="w-full flex items-center justify-center gap-2"
-                  disabled={!faceDetected}
                 >
                   <Camera className="w-4 h-4" />
                   Capture
