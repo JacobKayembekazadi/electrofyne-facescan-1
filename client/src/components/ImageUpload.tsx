@@ -57,6 +57,7 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
       faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
       {
         runtime: 'mediapipe',
+        refineLandmarks: true,
         solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
       }
     );
@@ -65,6 +66,13 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
       locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
       }
+    });
+
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
     });
 
     faceMesh.onResults((results) => {
@@ -207,7 +215,7 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
   };
 
   return (
-    <div className="text-center">
+    <div className="w-full max-w-md mx-auto px-4">
       <input
         type="file"
         ref={fileInputRef}
@@ -232,9 +240,9 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
+            className="space-y-4"
           >
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 md:p-12 cursor-pointer hover:border-primary/50 transition-colors">
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 md:p-8 cursor-pointer hover:border-primary/50 transition-colors">
               <motion.div
                 animate={{
                   y: [0, -10, 0],
@@ -245,40 +253,29 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
                   repeat: Infinity,
                   repeatDelay: 1
                 }}
+                className="flex flex-col items-center"
               >
-                <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              </motion.div>
-              <h3 className="text-lg font-semibold mb-2">Upload or Take a Photo</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Take a clear photo of your face in good lighting
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                {hasCamera && (
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto"
-                  >
-                    <Button onClick={startCamera} className="w-full sm:w-auto flex items-center gap-2">
+                <UploadCloud className="w-12 h-12 mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">Upload or Take a Photo</h3>
+                <p className="text-sm text-muted-foreground mb-4 text-center">
+                  Take a clear photo of your face in good lighting
+                </p>
+                <div className="flex flex-col w-full gap-3">
+                  {hasCamera && (
+                    <Button onClick={startCamera} className="w-full flex items-center justify-center gap-2">
                       <Camera className="w-4 h-4" />
                       Take Photo
                     </Button>
-                  </motion.div>
-                )}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto"
-                >
+                  )}
                   <Button
                     variant={hasCamera ? "outline" : "default"}
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full sm:w-auto"
+                    className="w-full"
                   >
                     Choose File
                   </Button>
-                </motion.div>
-              </div>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         ) : null}
@@ -288,15 +285,19 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-xl mx-auto"
+            className="relative w-full"
           >
-            <div className="aspect-[4/3] w-full relative overflow-hidden rounded-lg">
+            <div className="aspect-[3/4] w-full relative overflow-hidden rounded-lg bg-black">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 className="absolute inset-0 w-full h-full object-cover"
               />
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Face detection overlay */}
+                <div className="w-48 h-48 border-2 border-primary/50 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              </div>
               {faceDetected && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -310,36 +311,23 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="absolute bottom-4 left-4 right-4 flex justify-center gap-4"
+                className="absolute bottom-4 left-4 right-4 flex flex-col gap-2"
               >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto"
+                <Button
+                  onClick={capturePhoto}
+                  className="w-full flex items-center justify-center gap-2"
+                  disabled={!faceDetected}
                 >
-                  <Button
-                    onClick={capturePhoto}
-                    className="w-full sm:w-auto flex items-center gap-2"
-                    disabled={!faceDetected}
-                  >
-                    <Camera className="w-4 h-4" />
-                    Capture
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto"
+                  <Camera className="w-4 h-4" />
+                  Capture
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={stopCamera}
+                  className="w-full"
                 >
-                  <Button
-                    variant="outline"
-                    onClick={stopCamera}
-                    className="w-full sm:w-auto"
-                  >
-                    <X className="w-4 h-4" />
-                    Cancel
-                  </Button>
-                </motion.div>
+                  Cancel
+                </Button>
               </motion.div>
             </div>
           </motion.div>
@@ -354,32 +342,26 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
             <motion.div
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              className="relative w-full max-w-sm mx-auto"
+              className="relative w-full aspect-[3/4] overflow-hidden rounded-lg"
             >
               <img
                 src={preview}
                 alt="Preview"
-                className="w-full rounded-lg"
+                className="w-full h-full object-cover"
               />
             </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full sm:w-auto mx-auto"
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPreview(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
+              }}
+              className="w-full"
             >
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setPreview(null);
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = "";
-                  }
-                }}
-                className="w-full sm:w-auto"
-              >
-                Choose Different Photo
-              </Button>
-            </motion.div>
+              Choose Different Photo
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

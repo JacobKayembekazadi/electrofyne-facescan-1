@@ -27,7 +27,6 @@ const mockUser = {
       recommendations: ["Gentle Cleanser", "Spot Treatment"],
     },
   ],
-  // Mock routine data
   routineProgress: {
     morningSteps: [
       { id: "cleanse-am", name: "Cleanse", completed: true, timeOfDay: "morning" as const, completedAt: new Date() },
@@ -49,9 +48,10 @@ const mockUser = {
 
 export default function Profile() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card>
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Profile Header - Optimized for mobile */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="order-1">
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>
           </CardHeader>
@@ -65,17 +65,17 @@ export default function Profile() {
                 <label className="text-sm font-medium">Email</label>
                 <p className="text-lg">{mockUser.email}</p>
               </div>
-              <Button className="w-full sm:w-auto">Edit Profile</Button>
+              <Button className="w-full">Edit Profile</Button>
             </div>
           </CardContent>
         </Card>
 
-        <div className="order-1 md:order-none">
+        <div className="order-2">
           <Leaderboard userId={mockUser.id} />
         </div>
       </div>
 
-      {/* Routine Progress Animation */}
+      {/* Routine Progress - Full width on mobile */}
       <div className="rounded-lg overflow-hidden">
         <RoutineProgressAnimation 
           morningSteps={mockUser.routineProgress.morningSteps}
@@ -85,32 +85,36 @@ export default function Profile() {
         />
       </div>
 
-      {/* Progress Timeline */}
+      {/* Progress Timeline - Full width on mobile */}
       <div className="rounded-lg overflow-hidden">
         <SkinProgressTimeline userId={mockUser.id} />
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="space-y-8">
+      {/* Dashboards and Challenges - Stack on mobile, side by side on desktop */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
           <HealthDashboard userId={mockUser.id} />
-          <Challenges userId={mockUser.id} />
+          <div className="overflow-x-hidden">
+            <Challenges userId={mockUser.id} />
+          </div>
         </div>
-        <div className="space-y-8">
+        <div className="space-y-6">
           <Achievements userId={mockUser.id} />
           <ProgressDashboard userId={mockUser.id} />
         </div>
       </div>
 
+      {/* Analysis History - Better spacing on mobile */}
       <Card>
         <CardHeader>
           <CardTitle>Analysis History</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {mockUser.analysisHistory.map((analysis) => (
               <Card key={analysis.id}>
                 <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                  <div className="flex flex-col gap-4">
                     <div>
                       <p className="font-medium">Analysis on {analysis.date}</p>
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -124,17 +128,17 @@ export default function Profile() {
                         ))}
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                    <div>
+                      <p className="text-sm font-medium mb-2">Recommended Products:</p>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground">
+                        {analysis.recommendations.map((product) => (
+                          <li key={product} className="break-words">{product}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full">
                       View Details
                     </Button>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium mb-2">Recommended Products:</p>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground">
-                      {analysis.recommendations.map((product) => (
-                        <li key={product} className="break-words">{product}</li>
-                      ))}
-                    </ul>
                   </div>
                 </CardContent>
               </Card>
