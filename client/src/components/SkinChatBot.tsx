@@ -12,6 +12,23 @@ interface Message {
   content: string;
 }
 
+// Product mapping for links
+const PRODUCTS = {
+  "LED Face Mask": "/products/led-face-mask",
+  "Facial Sculptor": "/products/facial-sculptor",
+  "Hydrating Facial Toner": "/products/hydrating-toner"
+};
+
+// Function to add links to product mentions
+function addProductLinks(text: string) {
+  let result = text;
+  Object.entries(PRODUCTS).forEach(([product, url]) => {
+    const regex = new RegExp(product, 'g');
+    result = result.replace(regex, `<a href="${url}" class="text-primary hover:underline">${product}</a>`);
+  });
+  return result;
+}
+
 export default function SkinChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -53,6 +70,7 @@ export default function SkinChatBot() {
         description: "Failed to get response from the chatbot. Please try again.",
         variant: "destructive",
       });
+      console.error("Chat Error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -60,12 +78,6 @@ export default function SkinChatBot() {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          Skin Care Assistant
-        </CardTitle>
-      </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4 mb-4">
           <AnimatePresence initial={false}>
@@ -83,9 +95,12 @@ export default function SkinChatBot() {
                       ? "bg-muted text-foreground"
                       : "bg-primary text-primary-foreground"
                   }`}
-                >
-                  {message.content}
-                </div>
+                  dangerouslySetInnerHTML={{
+                    __html: message.role === "assistant" 
+                      ? addProductLinks(message.content)
+                      : message.content
+                  }}
+                />
               </motion.div>
             ))}
             {isLoading && (

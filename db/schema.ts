@@ -102,6 +102,15 @@ export const skinHealthScores = pgTable("skin_health_scores", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const errorLogs = pgTable("error_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  error: text("error").notNull(),
+  stack: text("stack"),
+  metadata: jsonb("metadata"),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Analysis = typeof analyses.$inferSelect;
@@ -120,6 +129,8 @@ export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = typeof userChallenges.$inferInsert;
 export type SkinHealthScore = typeof skinHealthScores.$inferSelect;
 export type InsertSkinHealthScore = typeof skinHealthScores.$inferInsert;
+export type ErrorLog = typeof errorLogs.$inferSelect;
+export type InsertErrorLog = typeof errorLogs.$inferInsert;
 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -139,3 +150,5 @@ export const insertUserChallengeSchema = createInsertSchema(userChallenges);
 export const selectUserChallengeSchema = createSelectSchema(userChallenges);
 export const insertSkinHealthScoreSchema = createInsertSchema(skinHealthScores);
 export const selectSkinHealthScoreSchema = createSelectSchema(skinHealthScores);
+export const insertErrorLogSchema = createInsertSchema(errorLogs);
+export const selectErrorLogSchema = createSelectSchema(errorLogs);

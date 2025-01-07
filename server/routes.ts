@@ -1,14 +1,37 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
-import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard, challengeTemplates, userChallenges } from "@db/schema";
+import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard, challengeTemplates, userChallenges, errorLogs } from "@db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { differenceInDays, startOfWeek, getWeek, getYear, addDays } from "date-fns";
-//import OpenAI from "openai"; // Removed OpenAI import
+import { setTimeout } from "timers/promises";
 
-//const openai = new OpenAI({ // Removed OpenAI initialization
-//  apiKey: process.env.VITE_OPENAI_API_KEY,
-//});
+// Add error logging function
+async function logChatError(error: any, userId?: number) {
+  try {
+    await db.insert(errorLogs).values({
+      userId: userId,
+      timestamp: new Date(),
+      error: error.message,
+      stack: error.stack,
+      metadata: { type: 'chat_error' }
+    });
+  } catch (logError) {
+    console.error("Failed to log error:", logError);
+  }
+}
+
+// Add retry mechanism
+async function retryRequest(fn: () => Promise<any>, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      await setTimeout(Math.min(1000 * attempt, 3000)); // Exponential backoff
+    }
+  }
+}
 
 export function registerRoutes(app: Express): Server {
   // Get user analyses
@@ -460,29 +483,33 @@ export function registerRoutes(app: Express): Server {
 
         Always maintain a friendly, professional tone and focus on actionable advice.`;
 
-      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: systemMessage },
-            ...messages
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-        })
+      const chatResponse = await retryRequest(async () => {
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              { role: "system", content: systemMessage },
+              ...messages
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(`DeepSeek API error: ${error}`);
+        }
+
+        return response;
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`DeepSeek API error: ${error}`);
-      }
-
-      const data = await response.json();
+      const data = await chatResponse.json();
       const content = data.choices?.[0]?.message?.content;
 
       if (!content) {
@@ -491,9 +518,11 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: content });
     } catch (error: any) {
-      console.error("Chat API Error:", error);
+      const userId = req.user?.id;
+      await logChatError(error, userId);
+
       res.status(500).json({
-        message: "Failed to get response from the AI. Please try again.",
+        message: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.",
         error: error.message
       });
     }

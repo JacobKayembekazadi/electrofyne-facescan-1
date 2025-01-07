@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { MessageCircle, X } from "lucide-react";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import SkinChatBot from "./SkinChatBot";
 
 export default function GlobalChat() {
@@ -19,6 +19,16 @@ export default function GlobalChat() {
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-2xl">
+          <DrawerHeader className="flex justify-between items-center border-b pb-2 mb-4">
+            <DrawerTitle>Skin Care Assistant</DrawerTitle>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setIsOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </DrawerHeader>
           <SkinChatBot />
         </div>
       </DrawerContent>
