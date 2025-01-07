@@ -1,32 +1,86 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send, MessageCircle } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { ProductCard } from "@/components/ui/product-card";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-// Product mapping for links
+// Product data with detailed information
 const PRODUCTS = {
-  "LED Face Mask": "/products/led-face-mask",
-  "Facial Sculptor": "/products/facial-sculptor",
-  "Hydrating Facial Toner": "/products/hydrating-toner"
+  "LED Face Mask": {
+    name: "LED Face Mask",
+    description: "Advanced light therapy for deep cleansing and skin rejuvenation",
+    price: "$299.99",
+    imageUrl: "/products/led-face-mask.jpg",
+    productUrl: "/products/led-face-mask"
+  },
+  "Facial Sculptor": {
+    name: "Facial Sculptor",
+    description: "Premium facial massager for improved circulation and skin toning",
+    price: "$149.99",
+    imageUrl: "/products/facial-sculptor.jpg",
+    productUrl: "/products/facial-sculptor"
+  },
+  "Hydrating Facial Toner": {
+    name: "Hydrating Facial Toner",
+    description: "Alcohol-free toner for deep hydration and skin balancing",
+    price: "$39.99",
+    imageUrl: "/products/hydrating-toner.jpg",
+    productUrl: "/products/hydrating-toner"
+  }
 };
 
-// Function to add links to product mentions
-function addProductLinks(text: string) {
+// Function to identify product mentions and create recommendation cards
+function formatMessageContent(text: string) {
   let result = text;
-  Object.entries(PRODUCTS).forEach(([product, url]) => {
-    const regex = new RegExp(product, 'g');
-    result = result.replace(regex, `<a href="${url}" class="text-primary hover:underline">${product}</a>`);
+  const productCards: JSX.Element[] = [];
+
+  Object.entries(PRODUCTS).forEach(([productName, productData], index) => {
+    if (text.includes(productName)) {
+      // Add a placeholder for the product card
+      const placeholder = `[[PRODUCT_CARD_${index}]]`;
+      result = result.replace(new RegExp(productName, 'g'), placeholder);
+
+      // Create product card
+      productCards.push(
+        <motion.div
+          key={`product-${index}`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.2 }}
+          className="my-2"
+        >
+          <ProductCard {...productData} />
+        </motion.div>
+      );
+    }
   });
-  return result;
+
+  // Split text into paragraphs and insert product cards where needed
+  const elements = result.split(/\n+/).map((paragraph, i) => {
+    const parts = paragraph.split(/(\[\[PRODUCT_CARD_\d+\]\])/);
+    return (
+      <p key={i} className="mb-2">
+        {parts.map((part, j) => {
+          const match = part.match(/\[\[PRODUCT_CARD_(\d+)\]\]/);
+          if (match) {
+            return productCards[parseInt(match[1])];
+          }
+          return part;
+        })}
+      </p>
+    );
+  });
+
+  return elements;
 }
 
 export default function SkinChatBot() {
@@ -95,12 +149,11 @@ export default function SkinChatBot() {
                       ? "bg-muted text-foreground"
                       : "bg-primary text-primary-foreground"
                   }`}
-                  dangerouslySetInnerHTML={{
-                    __html: message.role === "assistant" 
-                      ? addProductLinks(message.content)
-                      : message.content
-                  }}
-                />
+                >
+                  {message.role === "assistant" 
+                    ? formatMessageContent(message.content)
+                    : message.content}
+                </div>
               </motion.div>
             ))}
             {isLoading && (
