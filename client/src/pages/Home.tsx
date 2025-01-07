@@ -22,13 +22,6 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Education Modules Section */}
-      <section className="py-16 bg-primary/5 rounded-3xl mb-16">
-        <div className="max-w-5xl mx-auto px-4">
-          <EducationModules />
-        </div>
-      </section>
-
       {/* New Skin Analysis Section */}
       <section className="py-16 bg-primary/5 rounded-3xl mb-16">
         <div className="max-w-4xl mx-auto px-4">
@@ -213,6 +206,13 @@ export default function Home() {
           <Link href="/analysis">
             <Button>Get Started</Button>
           </Link>
+        </div>
+      </section>
+
+      {/* Education Modules Section - Now placed after Science-Backed Solutions */}
+      <section className="py-16 bg-primary/5 rounded-3xl mb-16">
+        <div className="max-w-5xl mx-auto px-4">
+          <EducationModules />
         </div>
       </section>
     </div>
