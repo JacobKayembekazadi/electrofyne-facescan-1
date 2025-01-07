@@ -5,8 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import {
   Droplet,
   Sun,
@@ -14,6 +16,7 @@ import {
   Shield,
   Hexagon,
   BarChart,
+  RefreshCw,
 } from "lucide-react";
 
 interface HealthMetric {
@@ -29,11 +32,43 @@ interface HealthDashboardProps {
 }
 
 export default function HealthDashboard({ userId }: HealthDashboardProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: healthMetrics } = useQuery<{
     overall: number;
     metrics: HealthMetric[];
   }>({
     queryKey: [`/api/users/${userId}/health-metrics`],
+  });
+
+  const updateMetrics = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/users/${userId}/health-metrics/update`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update metrics');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}/health-metrics`] });
+      toast({
+        title: "Success",
+        description: "Health metrics have been updated with your latest scan data.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update health metrics. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const getScoreColor = (value: number) => {
@@ -99,10 +134,21 @@ export default function HealthDashboard({ userId }: HealthDashboardProps) {
       {/* Overall Health Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            Overall Skin Health
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              <CardTitle>Overall Skin Health</CardTitle>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateMetrics.mutate()}
+              disabled={updateMetrics.isPending}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${updateMetrics.isPending ? 'animate-spin' : ''}`} />
+              Update Metrics
+            </Button>
+          </div>
           <CardDescription>
             Your skin health score based on multiple factors
           </CardDescription>
