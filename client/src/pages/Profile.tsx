@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ProgressDashboard from "../components/ProgressDashboard";
+import Achievements from "../components/Achievements";
 
 // Mock user data
 const mockUser = {
-  id: 1, // Added ID for progress tracking
+  id: 1,
   name: "John Doe",
   email: "john@example.com",
   analysisHistory: [
@@ -44,6 +45,8 @@ export default function Profile() {
           </div>
         </CardContent>
       </Card>
+
+      <Achievements userId={mockUser.id} />
 
       <ProgressDashboard userId={mockUser.id} />
 
