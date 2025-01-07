@@ -7,17 +7,25 @@ import DailySkinTracker from "../components/DailySkinTracker";
 import TextureAnalysisView from "../components/TextureAnalysisView";
 import RoutineProgressAnimation from "../components/RoutineProgressAnimation";
 import ImageComparisonSlider from "../components/ImageComparisonSlider";
+import SkinTypeQuiz from "../components/SkinTypeQuiz";
 import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import RoutineOptimizer from "../components/RoutineOptimizer";
 
-type AnalysisStage = "upload" | "analyzing" | "complete";
+type AnalysisStage = "quiz" | "upload" | "analyzing" | "complete";
+
+interface SkinTypeResult {
+  type: string;
+  description: string;
+  recommendations: string[];
+}
 
 export default function Analysis() {
-  const [stage, setStage] = useState<AnalysisStage>("upload");
+  const [stage, setStage] = useState<AnalysisStage>("quiz");
   const [results, setResults] = useState<any>(null);
   const [textureResults, setTextureResults] = useState<any>(null);
   const [beforeImage, setBeforeImage] = useState<string>("");
+  const [skinType, setSkinType] = useState<SkinTypeResult | null>(null);
   const [routineData, setRoutineData] = useState({
     morningSteps: [
       { id: "1", name: "Cleanser", completed: false, timeOfDay: "morning" as const },
@@ -36,6 +44,15 @@ export default function Analysis() {
     lastCompletedAt: new Date(),
   });
   const { toast } = useToast();
+
+  const handleQuizComplete = (result: SkinTypeResult) => {
+    setSkinType(result);
+    setStage("upload");
+    toast({
+      title: `Your Skin Type: ${result.type}`,
+      description: result.description,
+    });
+  };
 
   const handleStepComplete = (stepId: string, completed: boolean) => {
     setRoutineData(prev => {
@@ -154,6 +171,10 @@ export default function Analysis() {
 
       <div className="grid gap-8">
         <Card className="p-6">
+          {stage === "quiz" && (
+            <SkinTypeQuiz onComplete={handleQuizComplete} />
+          )}
+
           {stage === "upload" && (
             <ImageUpload onUpload={handleImageUpload} />
           )}
@@ -184,6 +205,19 @@ export default function Analysis() {
                   textureMap={textureResults.textureMap}
                   originalImage={textureResults.originalImage}
                 />
+              )}
+
+              {skinType && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Your Skin Type: {skinType.type}</h3>
+                  <p className="text-muted-foreground mb-4">{skinType.description}</p>
+                  <h4 className="font-medium mb-2">Recommended Care Tips:</h4>
+                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                    {skinType.recommendations.map((tip, index) => (
+                      <li key={index}>{tip}</li>
+                    ))}
+                  </ul>
+                </Card>
               )}
 
               <RoutineOptimizer skinAnalysis={results} />
