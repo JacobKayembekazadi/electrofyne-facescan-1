@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { analyses, users, progressMetrics, achievements, userAchievements } from "@db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   // Get user analyses
@@ -38,13 +38,13 @@ export function registerRoutes(app: Express): Server {
       const metrics = {
         analysisId: analysis.id,
         userId,
-        hydrationScore: results.hydrationLevel || 0,
-        textureScore: results.textureScore || 0,
-        brightnessScore: results.brightnessScore || 0,
-        overallHealth: (results.hydrationLevel + results.textureScore + results.brightnessScore) / 3,
+        hydrationScore: results.hydrationLevel.toString(),
+        textureScore: results.textureScore.toString(),
+        brightnessScore: results.brightnessScore.toString(),
+        overallHealth: ((results.hydrationLevel + results.textureScore + results.brightnessScore) / 3).toString(),
       };
 
-      await db.insert(progressMetrics).values([metrics]);
+      await db.insert(progressMetrics).values(metrics);
 
       // Check for achievements
       const [user] = await db.select()
@@ -70,14 +70,21 @@ export function registerRoutes(app: Express): Server {
         .where(eq(achievements.type, 'overall'));
 
       for (const achievement of potentialAchievements) {
-        if (metrics.overallHealth >= achievement.requiredScore) {
-          // Check if user already has this achievement
-          const [existing] = await db.select()
-            .from(userAchievements)
-            .where(eq(userAchievements.userId, userId))
-            .where(eq(userAchievements.achievementId, achievement.id));
+        const overallHealthNum = parseFloat(metrics.overallHealth);
+        const requiredScoreNum = parseFloat(achievement.requiredScore.toString());
 
-          if (!existing) {
+        if (overallHealthNum >= requiredScoreNum) {
+          // Check if user already has this achievement
+          const existingAchievements = await db.select()
+            .from(userAchievements)
+            .where(
+              and(
+                eq(userAchievements.userId, userId),
+                eq(userAchievements.achievementId, achievement.id)
+              )
+            );
+
+          if (existingAchievements.length === 0) {
             await db.insert(userAchievements)
               .values({
                 userId,
@@ -118,6 +125,10 @@ export function registerRoutes(app: Express): Server {
         .from(users)
         .where(eq(users.id, userId));
 
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       // Get user's achievements
       const userAchievementsData = await db
         .select({
@@ -132,8 +143,7 @@ export function registerRoutes(app: Express): Server {
           userAchievements,
           eq(achievements.id, userAchievements.achievementId)
         )
-        .where(eq(userAchievements.userId, userId))
-        .orderBy(userAchievements.unlockedAt);
+        .where(eq(userAchievements.userId, userId));
 
       res.json({
         level: user.level,
