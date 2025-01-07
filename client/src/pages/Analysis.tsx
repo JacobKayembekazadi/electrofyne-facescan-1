@@ -6,11 +6,31 @@ import ProductRecommendations from "../components/ProductRecommendations";
 import DailySkinTracker from "../components/DailySkinTracker";
 import ARSkinVisualization from "../components/ARSkinVisualization";
 import TextureAnalysisView from "../components/TextureAnalysisView";
+import RoutineProgressAnimation from "../components/RoutineProgressAnimation";
 import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import RoutineOptimizer from "../components/RoutineOptimizer";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
+
+// Mock data for demonstration
+const mockRoutineData = {
+  morningSteps: [
+    { id: "1", name: "Cleanser", completed: true, timeOfDay: "morning" as const, completedAt: new Date() },
+    { id: "2", name: "Toner", completed: true, timeOfDay: "morning" as const, completedAt: new Date() },
+    { id: "3", name: "Serum", completed: false, timeOfDay: "morning" as const },
+    { id: "4", name: "Moisturizer", completed: false, timeOfDay: "morning" as const },
+    { id: "5", name: "Sunscreen", completed: false, timeOfDay: "morning" as const },
+  ],
+  eveningSteps: [
+    { id: "6", name: "Makeup Remover", completed: false, timeOfDay: "evening" as const },
+    { id: "7", name: "Cleanser", completed: false, timeOfDay: "evening" as const },
+    { id: "8", name: "Treatment", completed: false, timeOfDay: "evening" as const },
+    { id: "9", name: "Night Cream", completed: false, timeOfDay: "evening" as const },
+  ],
+  streak: 3,
+  lastCompletedAt: new Date(),
+};
 
 export default function Analysis() {
   const [stage, setStage] = useState<AnalysisStage>("upload");
@@ -152,6 +172,8 @@ export default function Analysis() {
               )}
 
               <RoutineOptimizer skinAnalysis={results} />
+
+              <RoutineProgressAnimation {...mockRoutineData} />
 
               <ProductRecommendations results={results} />
             </div>
