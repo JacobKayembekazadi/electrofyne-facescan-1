@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import CameraPermissionDialog from "./CameraPermissionDialog";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ImageUploadProps {
   onUpload: (file: File) => void;
@@ -21,19 +22,16 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
   const [permissionState, setPermissionState] = useState<"prompt" | "granted" | "denied">("prompt");
 
   useEffect(() => {
-    // Check if device has camera and get initial permission state
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const cameras = devices.filter(device => device.kind === 'videoinput');
         setHasCamera(cameras.length > 0);
 
-        // Check current permission state
         if (navigator.permissions && navigator.permissions.query) {
           navigator.permissions.query({ name: 'camera' as PermissionName })
             .then(result => {
               setPermissionState(result.state as "prompt" | "granted" | "denied");
 
-              // Listen for permission changes
               result.addEventListener('change', () => {
                 setPermissionState(result.state as "prompt" | "granted" | "denied");
               });
@@ -175,73 +173,133 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
         permissionState={permissionState}
       />
 
-      {!preview && !isCameraActive ? (
-        <div className="space-y-6">
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 cursor-pointer hover:border-primary/50 transition-colors">
-            <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">Upload or Take a Photo</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Take a clear photo of your face in good lighting
-            </p>
-            <div className="flex justify-center gap-4">
-              {hasCamera && (
-                <Button onClick={startCamera} className="flex items-center gap-2">
-                  <Camera className="w-4 h-4" />
-                  Take Photo
-                </Button>
-              )}
-              <Button 
-                variant={hasCamera ? "outline" : "default"} 
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Choose File
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {isCameraActive && (
-        <div className="relative max-w-xl mx-auto">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="w-full rounded-lg"
-          />
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-            <Button onClick={capturePhoto} className="flex items-center gap-2">
-              <Camera className="w-4 h-4" />
-              Capture
-            </Button>
-            <Button variant="outline" onClick={stopCamera}>
-              <X className="w-4 h-4" />
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {preview && (
-        <div className="space-y-4">
-          <img 
-            src={preview} 
-            alt="Preview" 
-            className="max-w-sm mx-auto rounded-lg"
-          />
-          <Button 
-            variant="outline"
-            onClick={() => {
-              setPreview(null);
-              if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-              }
-            }}
+      <AnimatePresence mode="wait">
+        {!preview && !isCameraActive ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
           >
-            Choose Different Photo
-          </Button>
-        </div>
-      )}
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 cursor-pointer hover:border-primary/50 transition-colors">
+              <motion.div
+                animate={{ 
+                  y: [0, -10, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 1
+                }}
+              >
+                <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              </motion.div>
+              <h3 className="text-lg font-semibold mb-2">Upload or Take a Photo</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Take a clear photo of your face in good lighting
+              </p>
+              <div className="flex justify-center gap-4">
+                {hasCamera && (
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button onClick={startCamera} className="flex items-center gap-2">
+                      <Camera className="w-4 h-4" />
+                      Take Photo
+                    </Button>
+                  </motion.div>
+                )}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button 
+                    variant={hasCamera ? "outline" : "default"} 
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Choose File
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+
+        {isCameraActive && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative max-w-xl mx-auto"
+          >
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full rounded-lg"
+            />
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="absolute bottom-4 left-0 right-0 flex justify-center gap-4"
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button onClick={capturePhoto} className="flex items-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  Capture
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button variant="outline" onClick={stopCamera}>
+                  <X className="w-4 h-4" />
+                  Cancel
+                </Button>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {preview && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <motion.img 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              src={preview} 
+              alt="Preview" 
+              className="max-w-sm mx-auto rounded-lg"
+            />
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setPreview(null);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                }}
+              >
+                Choose Different Photo
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
