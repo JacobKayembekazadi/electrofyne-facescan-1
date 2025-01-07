@@ -4,11 +4,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import {
   Droplet,
   Sun,
@@ -17,6 +19,7 @@ import {
   Hexagon,
   BarChart,
   RefreshCw,
+  Camera,
 } from "lucide-react";
 
 interface HealthMetric {
@@ -165,8 +168,8 @@ export default function HealthDashboard({ userId }: HealthDashboardProps) {
             </div>
             <BarChart className="w-8 h-8 text-primary" />
           </div>
-          <Progress 
-            value={overallHealth} 
+          <Progress
+            value={overallHealth}
             className={`h-2 ${getProgressColor(overallHealth)}`}
           />
         </CardContent>
@@ -203,8 +206,8 @@ export default function HealthDashboard({ userId }: HealthDashboardProps) {
                     </p>
                   </div>
                 </div>
-                <Progress 
-                  value={metric.value} 
+                <Progress
+                  value={metric.value}
                   className={`h-2 ${getProgressColor(metric.value)}`}
                 />
               </CardContent>
@@ -212,6 +215,23 @@ export default function HealthDashboard({ userId }: HealthDashboardProps) {
           );
         })}
       </div>
+
+      {/* Start Analysis Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <p className="text-muted-foreground">
+              Want to update your skin health metrics? Start a new analysis scan.
+            </p>
+            <Link href="/analysis">
+              <Button size="lg" className="w-full sm:w-auto">
+                <Camera className="mr-2 h-4 w-4" />
+                Start New Analysis
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
