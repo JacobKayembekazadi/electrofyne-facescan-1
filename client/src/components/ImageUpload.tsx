@@ -6,8 +6,6 @@ import CameraPermissionDialog from "./CameraPermissionDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import * as tf from '@tensorflow/tfjs';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
-import { Camera as MediapipeCamera } from '@mediapipe/camera_utils';
-import { FaceMesh } from '@mediapipe/face_mesh';
 
 interface ImageUploadProps {
   onUpload: (file: File) => void;
@@ -25,8 +23,10 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [permissionState, setPermissionState] = useState<"prompt" | "granted" | "denied">("prompt");
   const [faceDetected, setFaceDetected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Check for camera availability and permissions
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const cameras = devices.filter(device => device.kind === 'videoinput');
@@ -47,53 +47,59 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
         console.error('Error checking camera:', error);
         setHasCamera(false);
       });
+
+    // Cleanup function
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
 
   const initFaceDetection = async () => {
     if (!videoRef.current) return;
 
-    await tf.ready();
-    const model = await faceLandmarksDetection.createDetector(
-      faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
-      {
-        runtime: 'mediapipe',
-        refineLandmarks: true,
-        solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
-      }
-    );
-
-    const faceMesh = new FaceMesh({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-      }
-    });
-
-    faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-
-    faceMesh.onResults((results) => {
-      setFaceDetected(results.multiFaceLandmarks.length > 0);
-    });
-
-    const camera = new MediapipeCamera(videoRef.current, {
-      onFrame: async () => {
-        if (videoRef.current) {
-          await faceMesh.send({ image: videoRef.current });
+    try {
+      await tf.ready();
+      const model = await faceLandmarksDetection.createDetector(
+        faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
+        {
+          runtime: 'mediapipe',
+          solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh',
+          refineLandmarks: true,
         }
-      },
-      width: 1280,
-      height: 720
-    });
+      );
 
-    camera.start();
+      const detectFace = async () => {
+        if (videoRef.current && model) {
+          try {
+            const predictions = await model.estimateFaces(videoRef.current);
+            setFaceDetected(predictions.length > 0);
+          } catch (error) {
+            console.error('Face detection error:', error);
+          }
+
+          if (isCameraActive) {
+            requestAnimationFrame(detectFace);
+          }
+        }
+      };
+
+      detectFace();
+    } catch (error) {
+      console.error('Error initializing face detection:', error);
+      toast({
+        title: "Face Detection Error",
+        description: "There was an error initializing face detection. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const startCamera = async () => {
     try {
+      setIsLoading(true);
+
       if (permissionState === "denied") {
         setShowPermissionDialog(true);
         return;
@@ -106,7 +112,7 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment',
+          facingMode: 'user',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -114,6 +120,7 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
         setStream(mediaStream);
         setIsCameraActive(true);
         await initFaceDetection();
@@ -127,36 +134,14 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
       });
       setPermissionState("denied");
       setShowPermissionDialog(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const requestCameraPermission = async () => {
     setShowPermissionDialog(false);
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        setStream(mediaStream);
-        setIsCameraActive(true);
-        setPermissionState("granted");
-        await initFaceDetection();
-      }
-    } catch (error) {
-      console.error('Error requesting camera permission:', error);
-      setPermissionState("denied");
-      toast({
-        title: "Permission Denied",
-        description: "Camera access is required for skin analysis.",
-        variant: "destructive",
-      });
-    }
+    await startCamera();
   };
 
   const stopCamera = () => {
@@ -187,7 +172,11 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
 
       const context = canvas.getContext('2d');
       if (context) {
+        // Flip the image horizontally if using front camera
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
 
         canvas.toBlob((blob) => {
           if (blob) {
@@ -221,7 +210,6 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
         ref={fileInputRef}
         className="hidden"
         accept="image/*"
-        capture="environment"
         onChange={handleFileChange}
       />
 
@@ -262,15 +250,24 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
                 </p>
                 <div className="flex flex-col w-full gap-3">
                   {hasCamera && (
-                    <Button onClick={startCamera} className="w-full flex items-center justify-center gap-2">
-                      <Camera className="w-4 h-4" />
-                      Take Photo
+                    <Button 
+                      onClick={startCamera} 
+                      className="w-full flex items-center justify-center gap-2"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
+                      {isLoading ? "Starting Camera..." : "Take Photo"}
                     </Button>
                   )}
                   <Button
                     variant={hasCamera ? "outline" : "default"}
                     onClick={() => fileInputRef.current?.click()}
                     className="w-full"
+                    disabled={isLoading}
                   >
                     Choose File
                   </Button>
@@ -292,10 +289,10 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover"
+                muted
+                className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
               />
               <div className="absolute inset-0 pointer-events-none">
-                {/* Face detection overlay */}
                 <div className="w-48 h-48 border-2 border-primary/50 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
               </div>
               {faceDetected && (
