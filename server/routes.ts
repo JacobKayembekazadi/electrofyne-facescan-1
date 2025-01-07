@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
-import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard } from "@db/schema";
+import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard, challengeTemplates, userChallenges } from "@db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
-import { differenceInDays, startOfWeek, getWeek, getYear } from "date-fns";
+import { differenceInDays, startOfWeek, getWeek, getYear, addDays } from "date-fns";
 
 export function registerRoutes(app: Express): Server {
   // Get user analyses
@@ -215,6 +215,104 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get available and active challenges for a user
+  app.get("/api/users/:userId/challenges", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+
+      // Get user's active challenges
+      const activeChallenges = await db
+        .select()
+        .from(userChallenges)
+        .where(eq(userChallenges.userId, userId))
+        .innerJoin(
+          challengeTemplates,
+          eq(userChallenges.templateId, challengeTemplates.id)
+        );
+
+      // Get available challenge templates (not currently active for the user)
+      const availableTemplates = await db
+        .select()
+        .from(challengeTemplates)
+        .where(
+          sql`NOT EXISTS (
+            SELECT 1 FROM user_challenges
+            WHERE user_challenges.template_id = challenge_templates.id
+            AND user_challenges.user_id = ${userId}
+            AND user_challenges.status = 'active'
+          )`
+        );
+
+      // Format challenges for response
+      const formattedChallenges = [
+        ...activeChallenges.map(challenge => ({
+          id: challenge.challengeTemplates.id,
+          title: challenge.challengeTemplates.title,
+          description: challenge.challengeTemplates.description,
+          duration: challenge.challengeTemplates.duration,
+          pointsReward: challenge.challengeTemplates.pointsReward,
+          difficulty: challenge.challengeTemplates.difficulty,
+          status: challenge.userChallenges.status,
+          progress: challenge.userChallenges.progress,
+          startDate: challenge.userChallenges.startDate,
+          endDate: challenge.userChallenges.endDate,
+        })),
+        ...availableTemplates.map(template => ({
+          id: template.id,
+          title: template.title,
+          description: template.description,
+          duration: template.duration,
+          pointsReward: template.pointsReward,
+          difficulty: template.difficulty,
+          status: 'available',
+          progress: { current: 0, total: 0 },
+          startDate: null,
+          endDate: null,
+        })),
+      ];
+
+      res.json(formattedChallenges);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch challenges" });
+    }
+  });
+
+  // Accept a challenge
+  app.post("/api/challenges/accept", async (req, res) => {
+    try {
+      const { userId, templateId } = req.body;
+
+      // Get the challenge template
+      const [template] = await db
+        .select()
+        .from(challengeTemplates)
+        .where(eq(challengeTemplates.id, templateId));
+
+      if (!template) {
+        return res.status(404).json({ message: "Challenge template not found" });
+      }
+
+      // Create user challenge
+      const startDate = new Date();
+      const endDate = addDays(startDate, template.duration);
+
+      const [userChallenge] = await db
+        .insert(userChallenges)
+        .values({
+          userId,
+          templateId,
+          startDate,
+          endDate,
+          status: 'active',
+          progress: { current: 0, total: template.requirements.steps.length },
+        })
+        .returning();
+
+      res.json(userChallenge);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to accept challenge" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

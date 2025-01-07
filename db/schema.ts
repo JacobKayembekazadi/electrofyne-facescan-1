@@ -60,7 +60,29 @@ export const leaderboard = pgTable("leaderboard", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Type definitions
+export const challengeTemplates = pgTable("challenge_templates", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  duration: integer("duration").notNull(), // in days
+  pointsReward: integer("points_reward").notNull(),
+  requirements: jsonb("requirements").notNull(),
+  difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userChallenges = pgTable("user_challenges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  templateId: integer("template_id").references(() => challengeTemplates.id).notNull(),
+  startDate: timestamp("start_date").defaultNow().notNull(),
+  endDate: timestamp("end_date"),
+  status: text("status").notNull(), // 'active', 'completed', 'failed'
+  progress: jsonb("progress").notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Analysis = typeof analyses.$inferSelect;
@@ -73,8 +95,11 @@ export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof userAchievements.$inferInsert;
 export type Leaderboard = typeof leaderboard.$inferSelect;
 export type InsertLeaderboard = typeof leaderboard.$inferInsert;
+export type ChallengeTemplate = typeof challengeTemplates.$inferSelect;
+export type InsertChallengeTemplate = typeof challengeTemplates.$inferInsert;
+export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertUserChallenge = typeof userChallenges.$inferInsert;
 
-// Schema validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertAnalysisSchema = createInsertSchema(analyses);
@@ -87,3 +112,7 @@ export const insertUserAchievementSchema = createInsertSchema(userAchievements);
 export const selectUserAchievementSchema = createSelectSchema(userAchievements);
 export const insertLeaderboardSchema = createInsertSchema(leaderboard);
 export const selectLeaderboardSchema = createSelectSchema(leaderboard);
+export const insertChallengeTemplateSchema = createInsertSchema(challengeTemplates);
+export const selectChallengeTemplateSchema = createSelectSchema(challengeTemplates);
+export const insertUserChallengeSchema = createInsertSchema(userChallenges);
+export const selectUserChallengeSchema = createSelectSchema(userChallenges);
