@@ -8,6 +8,7 @@ import ARSkinVisualization from "../components/ARSkinVisualization";
 import TextureAnalysisView from "../components/TextureAnalysisView";
 import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
+import RoutineOptimizer from "../components/RoutineOptimizer";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
 
@@ -22,17 +23,13 @@ export default function Analysis() {
     try {
       setStage("analyzing");
 
-      // Create URL for the uploaded image
       const imageUrl = URL.createObjectURL(file);
 
-      // Perform texture analysis
       const textureMap = await analyzeTexture(imageUrl);
       setTextureResults({ textureMap, originalImage: imageUrl });
 
-      // Mock analysis delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Mock analysis results with texture scores integrated
       const mockResults = {
         skinTone: "Type III (Medium)",
         primaryConcerns: ["Mild Acne", "Uneven Texture", "Dark Spots"],
@@ -43,7 +40,7 @@ export default function Analysis() {
             description: "Your skin's moisture retention capacity"
           },
           texture: {
-            value: 100 - textureMap.overallTexture, // Invert score as lower texture value means smoother skin
+            value: 100 - textureMap.overallTexture, 
             label: "Texture",
             description: "Overall smoothness and consistency"
           },
@@ -58,7 +55,7 @@ export default function Analysis() {
             description: "Even distribution of melanin"
           },
           poreHealth: {
-            value: Math.max(0, 100 - (textureMap.poreSize * 2)), // Convert pore size to health score
+            value: Math.max(0, 100 - (textureMap.poreSize * 2)), 
             label: "Pore Health",
             description: "Size and cleanliness of pores"
           },
@@ -153,6 +150,8 @@ export default function Analysis() {
                   originalImage={textureResults.originalImage}
                 />
               )}
+
+              <RoutineOptimizer skinAnalysis={results} />
 
               <ProductRecommendations results={results} />
             </div>

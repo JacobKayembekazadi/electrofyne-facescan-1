@@ -314,6 +314,99 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Updated route for generating skincare routines using DeepSeek
+  app.post("/api/generate-routine", async (req, res) => {
+    try {
+      const { skinAnalysis, currentRoutine } = req.body;
+
+      const prompt = `As an expert skincare routine optimizer, generate a personalized skincare routine based on this analysis:
+        Skin Type: ${skinAnalysis.skinTone}
+        Hydration Score: ${skinAnalysis.scores.hydration.value}
+        Texture Score: ${skinAnalysis.scores.texture.value}
+        Elasticity Score: ${skinAnalysis.scores.elasticity.value}
+        Pigmentation Score: ${skinAnalysis.scores.pigmentation.value}
+        Pore Health Score: ${skinAnalysis.scores.poreHealth.value}
+        ${currentRoutine ? `Current Products: ${currentRoutine.join(", ")}` : ""}
+        Primary Concerns: ${skinAnalysis.primaryConcerns.join(", ")}
+
+        Focus on:
+        1. Addressing the primary skin concerns
+        2. Incorporating appropriate product types and active ingredients
+        3. Proper ordering of products
+        4. Frequency of use
+        5. Consider any current routine products provided
+
+        Return only a JSON object with the following structure:
+        {
+          "morningSteps": [{ "product": string, "purpose": string, "instructions": string, "alternativeProducts": string[] }],
+          "eveningSteps": [{ "product": string, "purpose": string, "instructions": string, "alternativeProducts": string[] }],
+          "weeklyTreatments": [{ "product": string, "purpose": string, "instructions": string, "alternativeProducts": string[] }],
+          "estimatedDuration": { "morning": number, "evening": number },
+          "skinConcerns": string[],
+          "routineNotes": string[]
+        }`;
+
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "system", content: "You are a skincare expert AI assistant." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+          response_format: { type: "json" }
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`DeepSeek API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error("No response content from DeepSeek");
+      }
+
+      const routineData = JSON.parse(content);
+
+      // Process and validate the routine data
+      const processedRoutine = {
+        morningSteps: routineData.morningSteps.map((step: any, index: number) => ({
+          ...step,
+          order: index + 1,
+          time: "morning"
+        })),
+        eveningSteps: routineData.eveningSteps.map((step: any, index: number) => ({
+          ...step,
+          order: index + 1,
+          time: "evening"
+        })),
+        weeklyTreatments: routineData.weeklyTreatments.map((step: any, index: number) => ({
+          ...step,
+          order: index + 1,
+          frequency: "weekly"
+        })),
+        estimatedDuration: routineData.estimatedDuration,
+        skinConcerns: routineData.skinConcerns,
+        routineNotes: routineData.routineNotes
+      };
+
+      res.json(processedRoutine);
+    } catch (error: any) {
+      console.error("Error generating routine:", error);
+      res.status(500).json({ message: "Failed to generate skincare routine. Please try again." });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
