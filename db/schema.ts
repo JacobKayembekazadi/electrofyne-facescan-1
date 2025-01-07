@@ -83,6 +83,25 @@ export const userChallenges = pgTable("user_challenges", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const skinHealthScores = pgTable("skin_health_scores", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  analysisId: integer("analysis_id").references(() => analyses.id).notNull(),
+  // Core metrics (0-100 scale)
+  hydrationScore: decimal("hydration_score").notNull(),
+  textureScore: decimal("texture_score").notNull(),
+  elasticityScore: decimal("elasticity_score").notNull(),
+  pigmentationScore: decimal("pigmentation_score").notNull(),
+  poreHealthScore: decimal("pore_health_score").notNull(),
+  // Composite scores
+  overallHealth: decimal("overall_health").notNull(),
+  // Additional metadata
+  skinTone: text("skin_tone").notNull(), // Fitzpatrick scale (I-VI)
+  primaryConcerns: jsonb("primary_concerns").notNull(),
+  recommendations: jsonb("recommendations").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Analysis = typeof analyses.$inferSelect;
@@ -99,6 +118,8 @@ export type ChallengeTemplate = typeof challengeTemplates.$inferSelect;
 export type InsertChallengeTemplate = typeof challengeTemplates.$inferInsert;
 export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = typeof userChallenges.$inferInsert;
+export type SkinHealthScore = typeof skinHealthScores.$inferSelect;
+export type InsertSkinHealthScore = typeof skinHealthScores.$inferInsert;
 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -116,3 +137,5 @@ export const insertChallengeTemplateSchema = createInsertSchema(challengeTemplat
 export const selectChallengeTemplateSchema = createSelectSchema(challengeTemplates);
 export const insertUserChallengeSchema = createInsertSchema(userChallenges);
 export const selectUserChallengeSchema = createSelectSchema(userChallenges);
+export const insertSkinHealthScoreSchema = createInsertSchema(skinHealthScores);
+export const selectSkinHealthScoreSchema = createSelectSchema(skinHealthScores);

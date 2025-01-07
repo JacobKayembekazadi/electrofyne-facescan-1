@@ -12,14 +12,37 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Heart, Droplet, Sun, Shield } from "lucide-react";
+import { 
+  Droplet,  // Hydration
+  CircleDot,  // Texture
+  Fingerprint,  // Elasticity
+  Sun,  // Pigmentation
+  Circle,  // Pores
+  Activity,  // Overall health
+} from "lucide-react";
+
+interface HealthScore {
+  value: number;
+  label: string;
+  description: string;
+}
 
 interface AnalysisResultsProps {
   results: {
-    skinType: string;
-    concerns: string[];
-    hydrationLevel: number;
-    sensitivity: string;
+    skinTone: string;  // Fitzpatrick scale
+    primaryConcerns: string[];
+    scores: {
+      hydration: HealthScore;
+      texture: HealthScore;
+      elasticity: HealthScore;
+      pigmentation: HealthScore;
+      poreHealth: HealthScore;
+      overall: HealthScore;
+    };
+    recommendations: Array<{
+      category: string;
+      items: string[];
+    }>;
     imageUrl?: string;
     annotations?: Array<{
       x: number;
@@ -27,136 +50,160 @@ interface AnalysisResultsProps {
       type: string;
       description: string;
     }>;
-    strengths?: string[];
   };
 }
 
 export default function AnalysisResults({ results }: AnalysisResultsProps) {
-  const getMetricColor = (value: number) => {
-    if (value >= 80) return "text-green-500";
-    if (value >= 60) return "text-yellow-500";
+  // Helper function to determine color based on score
+  const getScoreColor = (value: number) => {
+    if (value >= 85) return "text-emerald-500";
+    if (value >= 70) return "text-green-500";
+    if (value >= 55) return "text-yellow-500";
+    if (value >= 40) return "text-orange-500";
     return "text-red-500";
   };
 
-  const getMetricIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'hydration':
-        return <Droplet className="w-5 h-5" />;
-      case 'sensitivity':
-        return <Shield className="w-5 h-5" />;
-      case 'brightness':
-        return <Sun className="w-5 h-5" />;
-      default:
-        return <Heart className="w-5 h-5" />;
-    }
+  // Helper function to get progress bar color
+  const getProgressColor = (value: number) => {
+    if (value >= 85) return "bg-emerald-500";
+    if (value >= 70) return "bg-green-500";
+    if (value >= 55) return "bg-yellow-500";
+    if (value >= 40) return "bg-orange-500";
+    return "bg-red-500";
   };
+
+  // Helper function to get score description
+  const getScoreDescription = (value: number) => {
+    if (value >= 85) return "Excellent";
+    if (value >= 70) return "Good";
+    if (value >= 55) return "Fair";
+    if (value >= 40) return "Needs Attention";
+    return "Poor";
+  };
+
+  const metrics = [
+    { key: 'hydration', icon: Droplet, score: results.scores.hydration },
+    { key: 'texture', icon: CircleDot, score: results.scores.texture },
+    { key: 'elasticity', icon: Fingerprint, score: results.scores.elasticity },
+    { key: 'pigmentation', icon: Sun, score: results.scores.pigmentation },
+    { key: 'poreHealth', icon: Circle, score: results.scores.poreHealth }
+  ];
 
   return (
     <div className="space-y-6">
+      {/* Overall Health Score */}
       <Card>
         <CardHeader>
-          <CardTitle>Analysis Results</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            Overall Skin Health
+          </CardTitle>
           <CardDescription>
-            Here's what we found about your skin health
+            Based on multiple factors and advanced analysis
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-8">
-            {/* Annotated Image Section */}
-            {results.imageUrl && (
-              <div className="relative">
-                <img
-                  src={results.imageUrl}
-                  alt="Skin Analysis"
-                  className="w-full rounded-lg"
-                />
-                <TooltipProvider>
-                  {results.annotations?.map((annotation, index) => (
-                    <Tooltip key={index}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className="absolute w-6 h-6 rounded-full border-2 border-primary cursor-pointer transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
-                          style={{
-                            left: `${annotation.x}%`,
-                            top: `${annotation.y}%`,
-                          }}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="font-medium">{annotation.type}</p>
-                        <p className="text-sm">{annotation.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </TooltipProvider>
-              </div>
-            )}
-
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">Hydration Level</h4>
-                <div className="flex items-center gap-4">
-                  <Droplet className={`w-8 h-8 ${getMetricColor(results.hydrationLevel)}`} />
-                  <div className="flex-1">
-                    <Progress value={results.hydrationLevel} className="mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      {results.hydrationLevel}% hydrated
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2">Skin Type</h4>
-                <p className="text-2xl font-semibold text-primary">
-                  {results.skinType.charAt(0).toUpperCase() + results.skinType.slice(1)}
-                </p>
-              </div>
-            </div>
-
-            {/* Concerns Section */}
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h4 className="text-sm font-medium mb-4">Areas of Focus</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {results.concerns.map((concern, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2">
-                        {getMetricIcon(concern)}
-                        <span className="font-medium">{concern}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <p className={`text-4xl font-bold ${getScoreColor(results.scores.overall.value)}`}>
+                {results.scores.overall.value}/100
+              </p>
+              <p className="text-muted-foreground">
+                {getScoreDescription(results.scores.overall.value)}
+              </p>
             </div>
+            <div className="text-right">
+              <p className="font-medium">Skin Tone</p>
+              <p className="text-muted-foreground">{results.skinTone}</p>
+            </div>
+          </div>
 
-            {/* Strengths Section */}
-            {results.strengths && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Your Skin's Strengths</h4>
-                <div className="bg-primary/10 rounded-lg p-4">
-                  <ul className="list-disc list-inside space-y-1">
-                    {results.strengths.map((strength, index) => (
-                      <li key={index} className="text-primary">
-                        {strength}
-                      </li>
-                    ))}
-                  </ul>
+          {/* Annotated Image Section */}
+          {results.imageUrl && (
+            <div className="relative mt-6">
+              <img
+                src={results.imageUrl}
+                alt="Skin Analysis"
+                className="w-full rounded-lg"
+              />
+              <TooltipProvider>
+                {results.annotations?.map((annotation, index) => (
+                  <Tooltip key={index}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={`absolute w-6 h-6 rounded-full border-2 cursor-pointer transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform ${getScoreColor(
+                          results.scores[annotation.type.toLowerCase()]?.value || 0
+                        )}`}
+                        style={{
+                          left: `${annotation.x}%`,
+                          top: `${annotation.y}%`,
+                          borderColor: `var(--${getScoreColor(
+                            results.scores[annotation.type.toLowerCase()]?.value || 0
+                          )})`,
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-medium">{annotation.type}</p>
+                      <p className="text-sm">{annotation.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Detailed Metrics */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {metrics.map(({ key, icon: Icon, score }) => (
+          <Card key={key}>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4 mb-4">
+                <Icon className={`w-6 h-6 ${getScoreColor(score.value)}`} />
+                <div>
+                  <h4 className="font-semibold">{score.label}</h4>
+                  <p className="text-sm text-muted-foreground">{score.description}</p>
                 </div>
               </div>
-            )}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>{getScoreDescription(score.value)}</span>
+                  <span className={getScoreColor(score.value)}>{score.value}/100</span>
+                </div>
+                <Progress 
+                  value={score.value} 
+                  className={`h-2 ${getProgressColor(score.value)}`}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-            {/* Motivational Message */}
-            <div className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-lg p-6 text-center">
-              <p className="text-lg font-medium text-primary">
-                You're on your way to healthier, glowing skin!
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Keep tracking your progress and following your personalized recommendations.
-              </p>
-            </div>
+      {/* Recommendations */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Personalized Recommendations</CardTitle>
+          <CardDescription>
+            Based on your skin analysis results
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {results.recommendations.map((rec, index) => (
+              <div key={index}>
+                <h4 className="font-medium mb-2">{rec.category}</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {rec.items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="text-muted-foreground">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
