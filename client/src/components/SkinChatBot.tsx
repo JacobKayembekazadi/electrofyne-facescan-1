@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Scan } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { ProductCard } from "@/components/ui/product-card";
+import { Link } from "wouter";
 
 interface Message {
   role: "user" | "assistant";
@@ -37,6 +38,19 @@ const PRODUCTS = {
     productUrl: "/products/hydrating-toner"
   }
 };
+
+// Function to check if message suggests face scan
+function shouldShowScanButton(text: string): boolean {
+  const scanKeywords = [
+    "skin analysis",
+    "face scan",
+    "analyze your skin",
+    "scan your face",
+    "start scanning",
+    "take a photo",
+  ];
+  return scanKeywords.some(keyword => text.toLowerCase().includes(keyword));
+}
 
 // Function to format messages and create product cards
 function formatMessageContent(text: string) {
@@ -69,6 +83,20 @@ function formatMessageContent(text: string) {
   return (
     <div>
       <div className="mb-4">{text}</div>
+      {shouldShowScanButton(text) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <Link href="/analysis">
+            <Button className="w-full">
+              <Scan className="mr-2 h-4 w-4" />
+              Start Face Scan
+            </Button>
+          </Link>
+        </motion.div>
+      )}
       {productCards.length > 0 && (
         <div className="mt-4 space-y-4">
           <div className="text-sm font-medium text-muted-foreground">Recommended Products:</div>
@@ -83,7 +111,7 @@ export default function SkinChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm your skin care assistant. I can help diagnose your skin concerns and provide personalized recommendations. What specific skin concerns would you like to discuss today?"
+      content: "Hello! I'm your skin care assistant. I can help diagnose your skin concerns and provide personalized recommendations. Would you like to start with a quick skin analysis?"
     }
   ]);
   const [input, setInput] = useState("");
