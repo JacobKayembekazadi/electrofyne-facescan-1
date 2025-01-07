@@ -1,4 +1,4 @@
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 
@@ -9,6 +9,7 @@ interface ImageUploadProps {
 export default function ImageUpload({ onUpload }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -24,6 +25,20 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
     onUpload(file);
   };
 
+  const handleCaptureClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute("capture", "environment");
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute("capture");
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="text-center">
       <input
@@ -33,18 +48,27 @@ export default function ImageUpload({ onUpload }: ImageUploadProps) {
         accept="image/*"
         onChange={handleFileChange}
       />
-      
+
       {!preview ? (
-        <div 
-          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 cursor-pointer hover:border-primary/50 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">Upload your photo</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Take or upload a clear photo of your face in good lighting
-          </p>
-          <Button>Select Image</Button>
+        <div className="space-y-6">
+          <div 
+            className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 cursor-pointer hover:border-primary/50 transition-colors"
+          >
+            <UploadCloud className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Upload or Take a Photo</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Take a clear photo of your face in good lighting
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={handleCaptureClick} className="flex items-center gap-2">
+                <Camera className="w-4 h-4" />
+                Take Photo
+              </Button>
+              <Button variant="outline" onClick={handleUploadClick}>
+                Choose File
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
