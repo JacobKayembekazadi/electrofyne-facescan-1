@@ -2,7 +2,9 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Sun, Moon, CheckCircle2, Trophy, Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoutineStep {
   id: string;
@@ -17,16 +19,21 @@ interface RoutineProgressProps {
   eveningSteps: RoutineStep[];
   streak: number;
   lastCompletedAt?: Date;
+  onStepComplete?: (stepId: string, completed: boolean) => void;
 }
 
 export default function RoutineProgressAnimation({
-  morningSteps,
-  eveningSteps,
+  morningSteps: initialMorningSteps,
+  eveningSteps: initialEveningSteps,
   streak,
   lastCompletedAt,
+  onStepComplete,
 }: RoutineProgressProps) {
+  const [morningSteps, setMorningSteps] = useState(initialMorningSteps);
+  const [eveningSteps, setEveningSteps] = useState(initialEveningSteps);
   const [morningProgress, setMorningProgress] = useState(0);
   const [eveningProgress, setEveningProgress] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Calculate progress percentages
@@ -37,6 +44,39 @@ export default function RoutineProgressAnimation({
     setMorningProgress(calculateProgress(morningSteps));
     setEveningProgress(calculateProgress(eveningSteps));
   }, [morningSteps, eveningSteps]);
+
+  const handleStepToggle = (stepId: string, completed: boolean) => {
+    const now = new Date();
+    const updateSteps = (steps: RoutineStep[]) =>
+      steps.map(step =>
+        step.id === stepId
+          ? { ...step, completed, completedAt: completed ? now : undefined }
+          : step
+      );
+
+    // Update local state
+    setMorningSteps(prev => {
+      const updated = updateSteps(prev);
+      if (prev !== updated) return updated;
+      return prev;
+    });
+
+    setEveningSteps(prev => {
+      const updated = updateSteps(prev);
+      if (prev !== updated) return updated;
+      return prev;
+    });
+
+    // Notify parent component
+    onStepComplete?.(stepId, completed);
+
+    // Show toast notification
+    toast({
+      title: completed ? "Step Completed! 🎉" : "Step Unchecked",
+      description: `Keep up the great work on your skincare routine!`,
+      duration: 2000,
+    });
+  };
 
   const ProgressSection = ({ 
     title, 
@@ -57,7 +97,7 @@ export default function RoutineProgressAnimation({
           {steps.filter(s => s.completed).length}/{steps.length} completed
         </span>
       </div>
-      
+
       <div className="relative">
         <Progress value={progress} className="h-2" />
         <motion.div
@@ -85,27 +125,28 @@ export default function RoutineProgressAnimation({
         {steps.map((step) => (
           <motion.div
             key={step.id}
-            className="flex items-center gap-2 text-sm"
+            className="flex items-center gap-3 text-sm p-2 hover:bg-accent/5 rounded-lg transition-colors"
             variants={{
               hidden: { opacity: 0, x: -20 },
               visible: { opacity: 1, x: 0 }
             }}
           >
-            <motion.div
-              initial={false}
-              animate={{
-                scale: step.completed ? [1, 1.2, 1] : 1,
-                color: step.completed ? "var(--primary)" : "var(--muted-foreground)"
-              }}
-              transition={{ duration: 0.2 }}
+            <Checkbox
+              id={step.id}
+              checked={step.completed}
+              onCheckedChange={(checked) => handleStepToggle(step.id, checked === true)}
+              className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+            />
+            <label
+              htmlFor={step.id}
+              className={`flex-grow cursor-pointer ${
+                step.completed ? "text-primary font-medium" : "text-muted-foreground"
+              }`}
             >
-              <CheckCircle2 className="w-4 h-4" />
-            </motion.div>
-            <span className={step.completed ? "text-primary font-medium" : "text-muted-foreground"}>
               {step.name}
-            </span>
+            </label>
             {step.completed && step.completedAt && (
-              <span className="ml-auto text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {new Date(step.completedAt).toLocaleTimeString([], { 
                   hour: '2-digit', 
                   minute: '2-digit' 
@@ -166,7 +207,7 @@ export default function RoutineProgressAnimation({
           steps={eveningSteps}
           progress={eveningProgress}
         />
-        
+
         {lastCompletedAt && (
           <motion.div 
             className="text-sm text-muted-foreground text-center"

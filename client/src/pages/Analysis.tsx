@@ -13,31 +13,47 @@ import RoutineOptimizer from "../components/RoutineOptimizer";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
 
-// Mock data for demonstration
-const mockRoutineData = {
-  morningSteps: [
-    { id: "1", name: "Cleanser", completed: true, timeOfDay: "morning" as const, completedAt: new Date() },
-    { id: "2", name: "Toner", completed: true, timeOfDay: "morning" as const, completedAt: new Date() },
-    { id: "3", name: "Serum", completed: false, timeOfDay: "morning" as const },
-    { id: "4", name: "Moisturizer", completed: false, timeOfDay: "morning" as const },
-    { id: "5", name: "Sunscreen", completed: false, timeOfDay: "morning" as const },
-  ],
-  eveningSteps: [
-    { id: "6", name: "Makeup Remover", completed: false, timeOfDay: "evening" as const },
-    { id: "7", name: "Cleanser", completed: false, timeOfDay: "evening" as const },
-    { id: "8", name: "Treatment", completed: false, timeOfDay: "evening" as const },
-    { id: "9", name: "Night Cream", completed: false, timeOfDay: "evening" as const },
-  ],
-  streak: 3,
-  lastCompletedAt: new Date(),
-};
-
 export default function Analysis() {
   const [stage, setStage] = useState<AnalysisStage>("upload");
   const [results, setResults] = useState<any>(null);
   const [textureResults, setTextureResults] = useState<any>(null);
   const [beforeImage, setBeforeImage] = useState<string>("");
+  const [routineData, setRoutineData] = useState({
+    morningSteps: [
+      { id: "1", name: "Cleanser", completed: false, timeOfDay: "morning" as const },
+      { id: "2", name: "Toner", completed: false, timeOfDay: "morning" as const },
+      { id: "3", name: "Serum", completed: false, timeOfDay: "morning" as const },
+      { id: "4", name: "Moisturizer", completed: false, timeOfDay: "morning" as const },
+      { id: "5", name: "Sunscreen", completed: false, timeOfDay: "morning" as const },
+    ],
+    eveningSteps: [
+      { id: "6", name: "Makeup Remover", completed: false, timeOfDay: "evening" as const },
+      { id: "7", name: "Cleanser", completed: false, timeOfDay: "evening" as const },
+      { id: "8", name: "Treatment", completed: false, timeOfDay: "evening" as const },
+      { id: "9", name: "Night Cream", completed: false, timeOfDay: "evening" as const },
+    ],
+    streak: 3,
+    lastCompletedAt: new Date(),
+  });
   const { toast } = useToast();
+
+  const handleStepComplete = (stepId: string, completed: boolean) => {
+    setRoutineData(prev => {
+      const updateSteps = (steps: typeof prev.morningSteps) =>
+        steps.map(step =>
+          step.id === stepId
+            ? { ...step, completed, completedAt: completed ? new Date() : undefined }
+            : step
+        );
+
+      return {
+        ...prev,
+        morningSteps: updateSteps(prev.morningSteps),
+        eveningSteps: updateSteps(prev.eveningSteps),
+        lastCompletedAt: new Date(),
+      };
+    });
+  };
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -60,7 +76,7 @@ export default function Analysis() {
             description: "Your skin's moisture retention capacity"
           },
           texture: {
-            value: 100 - textureMap.overallTexture, 
+            value: 100 - textureMap.overallTexture,
             label: "Texture",
             description: "Overall smoothness and consistency"
           },
@@ -75,7 +91,7 @@ export default function Analysis() {
             description: "Even distribution of melanin"
           },
           poreHealth: {
-            value: Math.max(0, 100 - (textureMap.poreSize * 2)), 
+            value: Math.max(0, 100 - (textureMap.poreSize * 2)),
             label: "Pore Health",
             description: "Size and cleanliness of pores"
           },
@@ -156,7 +172,7 @@ export default function Analysis() {
                 {beforeImage && (
                   <ImageComparisonSlider
                     beforeImage={beforeImage}
-                    afterImage={beforeImage} // Replace with actual after image when available
+                    afterImage={beforeImage}
                     beforeLabel="Initial Scan"
                     afterLabel="Current"
                   />
@@ -172,7 +188,10 @@ export default function Analysis() {
 
               <RoutineOptimizer skinAnalysis={results} />
 
-              <RoutineProgressAnimation {...mockRoutineData} />
+              <RoutineProgressAnimation
+                {...routineData}
+                onStepComplete={handleStepComplete}
+              />
 
               <ProductRecommendations results={results} />
             </div>
