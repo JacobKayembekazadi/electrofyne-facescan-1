@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { ScanLine, Shield, Sparkles } from "lucide-react";
+import { ScanLine, Shield, Sparkles, Camera } from "lucide-react";
 
 export default function Home() {
   return (
@@ -18,6 +18,76 @@ export default function Home() {
             Start Your Analysis
           </Button>
         </Link>
+      </section>
+
+      {/* New Skin Analysis Section */}
+      <section className="py-16 bg-primary/5 rounded-3xl mb-16">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-6">
+                Get Your Personalized Skin Analysis
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Our advanced AI technology analyzes your skin condition in real-time, providing detailed insights and personalized recommendations for your skincare routine.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <Camera className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Quick Scan</h3>
+                    <p className="text-muted-foreground">Take or upload a photo for instant analysis</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <ScanLine className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Detailed Results</h3>
+                    <p className="text-muted-foreground">Get comprehensive insights about your skin health</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-6 h-6 text-primary mt-1" />
+                  <div>
+                    <h3 className="font-semibold">Smart Recommendations</h3>
+                    <p className="text-muted-foreground">Receive tailored product suggestions and care tips</p>
+                  </div>
+                </div>
+              </div>
+              <Link href="/analysis">
+                <Button size="lg" className="mt-8">
+                  Start Free Analysis
+                </Button>
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/5 rounded-2xl transform rotate-6"></div>
+              <Card className="relative">
+                <CardContent className="p-6">
+                  <img
+                    src="/skin-analysis-demo.jpg"
+                    alt="Skin Analysis Demo"
+                    className="w-full rounded-lg shadow-lg"
+                  />
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Hydration Level</span>
+                      <div className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden">
+                        <div className="w-3/4 h-full bg-primary"></div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Texture Analysis</span>
+                      <div className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden">
+                        <div className="w-4/5 h-full bg-primary"></div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="grid md:grid-cols-3 gap-8 py-16">
