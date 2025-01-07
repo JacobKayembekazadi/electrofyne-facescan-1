@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
 import { ScanLine, Shield, Sparkles, Camera } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Home() {
   return (
@@ -64,23 +65,83 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/5 rounded-2xl transform rotate-6"></div>
               <Card className="relative">
                 <CardContent className="p-6">
-                  <img
-                    src="/skin-analysis-demo.jpg"
-                    alt="Skin Analysis Demo"
-                    className="w-full rounded-lg shadow-lg"
-                  />
+                  {/* Interactive Scan Preview */}
+                  <div className="relative aspect-[4/3] bg-black rounded-lg overflow-hidden">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0.4, 0.8, 0.4] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20"
+                    />
+                    <img
+                      src="/skin-analysis-demo.jpg"
+                      alt="Skin Analysis Demo"
+                      className="w-full h-full object-cover opacity-90"
+                    />
+                    {/* Scanning Animation */}
+                    <motion.div
+                      initial={{ top: "0%" }}
+                      animate={{ top: ["0%", "100%", "0%"] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      className="absolute left-0 w-full h-1 bg-primary/60 blur-sm"
+                    />
+                    {/* Scan Points */}
+                    {[
+                      { x: "30%", y: "30%", delay: 0 },
+                      { x: "70%", y: "40%", delay: 0.5 },
+                      { x: "45%", y: "60%", delay: 1 },
+                      { x: "60%", y: "70%", delay: 1.5 }
+                    ].map((point, index) => (
+                      <motion.div
+                        key={index}
+                        className="absolute w-4 h-4"
+                        style={{ left: point.x, top: point.y }}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: [0, 1, 1, 0], opacity: [0, 1, 1, 0] }}
+                        transition={{
+                          duration: 2,
+                          delay: point.delay,
+                          repeat: Infinity,
+                          repeatDelay: 2
+                        }}
+                      >
+                        <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+                        <div className="absolute inset-1 rounded-full bg-primary" />
+                      </motion.div>
+                    ))}
+                  </div>
                   <div className="mt-4 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Hydration Level</span>
-                      <div className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden">
-                        <div className="w-3/4 h-full bg-primary"></div>
-                      </div>
+                      <motion.div 
+                        className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden"
+                        initial={{ width: 0 }}
+                        animate={{ width: "8rem" }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      >
+                        <motion.div 
+                          className="h-full bg-primary"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "75%" }}
+                          transition={{ duration: 1, delay: 1 }}
+                        />
+                      </motion.div>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Texture Analysis</span>
-                      <div className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden">
-                        <div className="w-4/5 h-full bg-primary"></div>
-                      </div>
+                      <motion.div 
+                        className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden"
+                        initial={{ width: 0 }}
+                        animate={{ width: "8rem" }}
+                        transition={{ duration: 1, delay: 0.7 }}
+                      >
+                        <motion.div 
+                          className="h-full bg-primary"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "80%" }}
+                          transition={{ duration: 1, delay: 1.2 }}
+                        />
+                      </motion.div>
                     </div>
                   </div>
                 </CardContent>
