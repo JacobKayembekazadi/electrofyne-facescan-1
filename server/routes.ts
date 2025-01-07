@@ -4,6 +4,11 @@ import { db } from "@db";
 import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard, challengeTemplates, userChallenges } from "@db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { differenceInDays, startOfWeek, getWeek, getYear, addDays } from "date-fns";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.VITE_OPENAI_API_KEY,
+});
 
 export function registerRoutes(app: Express): Server {
   // Get user analyses
@@ -404,6 +409,48 @@ export function registerRoutes(app: Express): Server {
     } catch (error: any) {
       console.error("Error generating routine:", error);
       res.status(500).json({ message: "Failed to generate skincare routine. Please try again." });
+    }
+  });
+
+  // Chat endpoint for skin concerns
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { messages } = req.body;
+
+      // Add system message to guide the AI's responses
+      const chatMessages = [
+        {
+          role: "system",
+          content: `You are a knowledgeable skincare expert assistant. Your role is to:
+            1. Help users understand their skin concerns
+            2. Provide evidence-based advice and recommendations
+            3. Be empathetic and supportive
+            4. Keep responses concise but informative
+            5. Focus on gathering relevant information about skin conditions
+            6. Suggest appropriate skincare routines and products
+            7. Encourage users to seek professional medical advice for serious concerns
+
+            Always maintain a professional yet friendly tone. If users describe potentially serious skin conditions, remind them that this is not medical advice and encourage them to consult a dermatologist.`
+        },
+        ...messages
+      ];
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: chatMessages,
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      const response = completion.choices[0].message;
+
+      res.json({ message: response.content });
+    } catch (error: any) {
+      console.error("Chat API Error:", error);
+      res.status(500).json({
+        message: "Failed to get response from the AI. Please try again.",
+        error: error.message
+      });
     }
   });
 
