@@ -3,12 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
 import { ScanLine, Shield, Sparkles, Camera } from "lucide-react";
 import { motion } from "framer-motion";
-import HealthDashboard from "../components/HealthDashboard";
+import EducationModules from "../components/EducationModules";
 
 export default function Home() {
-  // Mock user ID for demonstration
-  const demoUserId = 1;
-
   return (
     <div className="max-w-6xl mx-auto">
       <section className="text-center py-16">
@@ -25,9 +22,11 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Health Dashboard Section */}
-      <section className="mb-16">
-        <HealthDashboard userId={demoUserId} />
+      {/* Education Modules Section */}
+      <section className="py-16 bg-primary/5 rounded-3xl mb-16">
+        <div className="max-w-5xl mx-auto px-4">
+          <EducationModules />
+        </div>
       </section>
 
       {/* New Skin Analysis Section */}
