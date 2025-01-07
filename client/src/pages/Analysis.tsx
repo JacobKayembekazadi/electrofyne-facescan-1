@@ -4,9 +4,9 @@ import ImageUpload from "../components/ImageUpload";
 import AnalysisResults from "../components/AnalysisResults";
 import ProductRecommendations from "../components/ProductRecommendations";
 import DailySkinTracker from "../components/DailySkinTracker";
-import ARSkinVisualization from "../components/ARSkinVisualization";
 import TextureAnalysisView from "../components/TextureAnalysisView";
 import RoutineProgressAnimation from "../components/RoutineProgressAnimation";
+import ImageComparisonSlider from "../components/ImageComparisonSlider";
 import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import RoutineOptimizer from "../components/RoutineOptimizer";
@@ -36,14 +36,14 @@ export default function Analysis() {
   const [stage, setStage] = useState<AnalysisStage>("upload");
   const [results, setResults] = useState<any>(null);
   const [textureResults, setTextureResults] = useState<any>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [beforeImage, setBeforeImage] = useState<string>("");
   const { toast } = useToast();
 
   const handleImageUpload = async (file: File) => {
     try {
       setStage("analyzing");
-
       const imageUrl = URL.createObjectURL(file);
+      setBeforeImage(imageUrl);
 
       const textureMap = await analyzeTexture(imageUrl);
       setTextureResults({ textureMap, originalImage: imageUrl });
@@ -153,15 +153,14 @@ export default function Analysis() {
             <div className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <AnalysisResults results={results} />
-                <div className="space-y-4">
-                  <ARSkinVisualization 
-                    videoRef={videoRef} 
-                    analysisResults={results}
+                {beforeImage && (
+                  <ImageComparisonSlider
+                    beforeImage={beforeImage}
+                    afterImage={beforeImage} // Replace with actual after image when available
+                    beforeLabel="Initial Scan"
+                    afterLabel="Current"
                   />
-                  <p className="text-sm text-muted-foreground text-center">
-                    Move your head slightly to see the AR visualization from different angles
-                  </p>
-                </div>
+                )}
               </div>
 
               {textureResults && (
