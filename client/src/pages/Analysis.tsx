@@ -5,6 +5,8 @@ import AnalysisResults from "../components/AnalysisResults";
 import ProductRecommendations from "../components/ProductRecommendations";
 import DailySkinTracker from "../components/DailySkinTracker";
 import ARSkinVisualization from "../components/ARSkinVisualization";
+import TextureAnalysisView from "../components/TextureAnalysisView";
+import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
@@ -12,6 +14,7 @@ type AnalysisStage = "upload" | "analyzing" | "complete";
 export default function Analysis() {
   const [stage, setStage] = useState<AnalysisStage>("upload");
   const [results, setResults] = useState<any>(null);
+  const [textureResults, setTextureResults] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -19,10 +22,17 @@ export default function Analysis() {
     try {
       setStage("analyzing");
 
+      // Create URL for the uploaded image
+      const imageUrl = URL.createObjectURL(file);
+
+      // Perform texture analysis
+      const textureMap = await analyzeTexture(imageUrl);
+      setTextureResults({ textureMap, originalImage: imageUrl });
+
       // Mock analysis delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Mock analysis results matching the expected interface
+      // Mock analysis results with texture scores integrated
       const mockResults = {
         skinTone: "Type III (Medium)",
         primaryConcerns: ["Mild Acne", "Uneven Texture", "Dark Spots"],
@@ -33,7 +43,7 @@ export default function Analysis() {
             description: "Your skin's moisture retention capacity"
           },
           texture: {
-            value: 65,
+            value: 100 - textureMap.overallTexture, // Invert score as lower texture value means smoother skin
             label: "Texture",
             description: "Overall smoothness and consistency"
           },
@@ -48,7 +58,7 @@ export default function Analysis() {
             description: "Even distribution of melanin"
           },
           poreHealth: {
-            value: 60,
+            value: Math.max(0, 100 - (textureMap.poreSize * 2)), // Convert pore size to health score
             label: "Pore Health",
             description: "Size and cleanliness of pores"
           },
@@ -60,21 +70,23 @@ export default function Analysis() {
         },
         recommendations: [
           {
+            category: "Texture Improvement",
+            items: [
+              textureMap.poreSize > 20 ? "Use a pore-minimizing toner" : "Continue with current pore care routine",
+              textureMap.lineDepth > 50 ? "Add retinol to reduce fine lines" : "Focus on prevention with antioxidants",
+              "Gentle exfoliation 2-3 times per week",
+              "Use products with niacinamide"
+            ]
+          },
+          {
             category: "Hydration",
             items: [
               "Use a hyaluronic acid serum",
               "Apply moisturizer while skin is damp"
             ]
-          },
-          {
-            category: "Texture",
-            items: [
-              "Gentle exfoliation 2-3 times per week",
-              "Use products with niacinamide"
-            ]
           }
         ],
-        imageUrl: URL.createObjectURL(file),
+        imageUrl: imageUrl,
         annotations: [
           {
             x: 35,
@@ -134,6 +146,14 @@ export default function Analysis() {
                   </p>
                 </div>
               </div>
+
+              {textureResults && (
+                <TextureAnalysisView
+                  textureMap={textureResults.textureMap}
+                  originalImage={textureResults.originalImage}
+                />
+              )}
+
               <ProductRecommendations results={results} />
             </div>
           )}
