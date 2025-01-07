@@ -38,49 +38,45 @@ const PRODUCTS = {
   }
 };
 
-// Function to identify product mentions and create recommendation cards
+// Function to format messages and create product cards
 function formatMessageContent(text: string) {
-  let result = text;
   const productCards: JSX.Element[] = [];
+  const mentionedProducts = new Set<string>();
 
-  Object.entries(PRODUCTS).forEach(([productName, productData], index) => {
+  // Find all mentioned products
+  Object.keys(PRODUCTS).forEach(productName => {
     if (text.includes(productName)) {
-      // Add a placeholder for the product card
-      const placeholder = `[[PRODUCT_CARD_${index}]]`;
-      result = result.replace(new RegExp(productName, 'g'), placeholder);
-
-      // Create product card
-      productCards.push(
-        <motion.div
-          key={`product-${index}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.2 }}
-          className="my-2"
-        >
-          <ProductCard {...productData} />
-        </motion.div>
-      );
+      mentionedProducts.add(productName);
     }
   });
 
-  // Split text into paragraphs and insert product cards where needed
-  const elements = result.split(/\n+/).map((paragraph, i) => {
-    const parts = paragraph.split(/(\[\[PRODUCT_CARD_\d+\]\])/);
-    return (
-      <p key={i} className="mb-2">
-        {parts.map((part, j) => {
-          const match = part.match(/\[\[PRODUCT_CARD_(\d+)\]\]/);
-          if (match) {
-            return productCards[parseInt(match[1])];
-          }
-          return part;
-        })}
-      </p>
+  // Create product cards for mentioned products
+  Array.from(mentionedProducts).forEach((productName, index) => {
+    const productData = PRODUCTS[productName as keyof typeof PRODUCTS];
+    productCards.push(
+      <motion.div
+        key={`product-${index}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.2 }}
+        className="my-2"
+      >
+        <ProductCard {...productData} />
+      </motion.div>
     );
   });
 
-  return elements;
+  return (
+    <div>
+      <div className="mb-4">{text}</div>
+      {productCards.length > 0 && (
+        <div className="mt-4 space-y-4">
+          <div className="text-sm font-medium text-muted-foreground">Recommended Products:</div>
+          {productCards}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function SkinChatBot() {
@@ -150,7 +146,7 @@ export default function SkinChatBot() {
                       : "bg-primary text-primary-foreground"
                   }`}
                 >
-                  {message.role === "assistant" 
+                  {message.role === "assistant"
                     ? formatMessageContent(message.content)
                     : message.content}
                 </div>
