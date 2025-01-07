@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 
 interface QuizQuestion {
   id: string;
@@ -117,6 +117,11 @@ export default function SkinTypeQuiz({ onComplete, onSkip }: SkinTypeQuizProps) 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState(false);
+  const [quizResult, setQuizResult] = useState<{
+    type: string;
+    description: string;
+    recommendations: string[];
+  } | null>(null);
 
   const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
 
@@ -208,8 +213,14 @@ export default function SkinTypeQuiz({ onComplete, onSkip }: SkinTypeQuizProps) 
       setCurrentQuestion(prev => prev + 1);
     } else {
       const result = calculateResult();
+      setQuizResult(result);
       setShowResult(true);
-      onComplete(result);
+    }
+  };
+
+  const handleComplete = () => {
+    if (quizResult) {
+      onComplete(quizResult);
     }
   };
 
@@ -286,13 +297,43 @@ export default function SkinTypeQuiz({ onComplete, onSkip }: SkinTypeQuizProps) 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="text-center"
+              className="space-y-6"
             >
-              <CheckCircle2 className="w-12 h-12 mx-auto text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Quiz Completed!</h3>
-              <p className="text-muted-foreground">
-                Your results have been calculated. View your personalized recommendations below.
-              </p>
+              <div className="text-center">
+                <CheckCircle2 className="w-12 h-12 mx-auto text-primary mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Your Skin Type Results</h3>
+              </div>
+
+              {quizResult && (
+                <div className="space-y-6 bg-muted/50 rounded-lg p-6">
+                  <div>
+                    <h4 className="text-lg font-semibold mb-2">Your Skin Type: {quizResult.type}</h4>
+                    <p className="text-muted-foreground">{quizResult.description}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Personalized Recommendations:</h4>
+                    <ul className="space-y-2">
+                      {quizResult.recommendations.map((rec, index) => (
+                        <motion.li
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center gap-2 text-muted-foreground"
+                        >
+                          <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                          <span>{rec}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <Button onClick={handleComplete} className="w-full">
+                    Continue to Skin Analysis
+                  </Button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

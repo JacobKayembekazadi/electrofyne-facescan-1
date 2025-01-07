@@ -10,10 +10,10 @@ export default function Navigation() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/">
-            <a className="flex items-center space-x-2">
+            <Button variant="link" className="p-0 flex items-center space-x-2">
               <ScanLine className="h-6 w-6" />
               <span className="font-bold">Electrofyne</span>
-            </a>
+            </Button>
           </Link>
 
           <nav className="hidden md:flex gap-6">
@@ -25,6 +25,11 @@ export default function Navigation() {
             <Link href="/analysis">
               <a className={location === "/analysis" ? "text-primary" : "text-muted-foreground"}>
                 Analysis
+              </a>
+            </Link>
+            <Link href="/about">
+              <a className={location === "/about" ? "text-primary" : "text-muted-foreground"}>
+                About Us
               </a>
             </Link>
           </nav>
