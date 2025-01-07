@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard, challengeTemplates, userChallenges, errorLogs } from "@db/schema";
@@ -7,21 +7,21 @@ import { differenceInDays, startOfWeek, getWeek, getYear, addDays } from "date-f
 import { setTimeout } from "timers/promises";
 
 // Add error logging function
-async function logChatError(error: any, userId?: number) {
+async function logError(error: any, userId?: number) {
   try {
     await db.insert(errorLogs).values({
       userId: userId,
       timestamp: new Date(),
       error: error.message,
       stack: error.stack,
-      metadata: { type: 'chat_error' }
+      metadata: { type: 'api_error' }
     });
   } catch (logError) {
     console.error("Failed to log error:", logError);
   }
 }
 
-// Add retry mechanism
+// Add retry mechanism for external API calls
 async function retryRequest(fn: () => Promise<any>, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -34,25 +34,113 @@ async function retryRequest(fn: () => Promise<any>, maxRetries = 3) {
 }
 
 export function registerRoutes(app: Express): Server {
-  // Get user analyses
-  app.get("/api/analyses/:userId", async (req, res) => {
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "healthy" });
+  });
+
+  // Face detection and skin analysis endpoint
+  app.post("/api/analyze", async (req: Request, res: Response) => {
+    const userId = req.body.userId;
     try {
-      const userId = parseInt(req.params.userId);
+      const { imageData } = req.body;
+
+      if (!imageData) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+
+      // Process image and analyze skin
+      const analysisResults = {
+        hydrationLevel: Math.random() * 100, // Replace with actual ML model results
+        textureScore: Math.random() * 100,
+        brightnessScore: Math.random() * 100,
+        recommendations: [
+          "LED Face Mask for deep-cleansing therapy",
+          "Facial Sculptor for circulation",
+          "Hydrating Facial Toner"
+        ]
+      };
+
+      // Store analysis results
+      const [analysis] = await db.insert(analyses)
+        .values({
+          userId,
+          imageUrl: "placeholder_url", // Replace with actual image storage
+          results: analysisResults,
+          recommendations: analysisResults.recommendations,
+        })
+        .returning();
+
+      // Calculate and store progress metrics
+      const metrics = {
+        analysisId: analysis.id,
+        userId,
+        hydrationScore: analysisResults.hydrationLevel.toString(),
+        textureScore: analysisResults.textureScore.toString(),
+        brightnessScore: analysisResults.brightnessScore.toString(),
+        overallHealth: ((analysisResults.hydrationLevel + analysisResults.textureScore + analysisResults.brightnessScore) / 3).toString(),
+      };
+
+      await db.insert(progressMetrics).values(metrics);
+
+      res.json({
+        analysis: analysis,
+        metrics: metrics
+      });
+    } catch (error) {
+      await logError(error, userId);
+      res.status(500).json({ message: "Failed to analyze image" });
+    }
+  });
+
+  // Get product recommendations
+  app.get("/api/recommendations/:userId", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.userId);
+    try {
+      // Get user's latest analysis
+      const [latestAnalysis] = await db
+        .select()
+        .from(analyses)
+        .where(eq(analyses.userId, userId))
+        .orderBy(desc(analyses.createdAt))
+        .limit(1);
+
+      if (!latestAnalysis) {
+        return res.status(404).json({ message: "No analysis found for user" });
+      }
+
+      // Return recommendations from latest analysis
+      res.json({
+        recommendations: latestAnalysis.recommendations,
+        analysisDate: latestAnalysis.createdAt
+      });
+    } catch (error) {
+      await logError(error, userId);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+
+  // Get user analyses
+  app.get("/api/analyses/:userId", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.userId);
+    try {
       const userAnalyses = await db.select()
         .from(analyses)
         .where(eq(analyses.userId, userId))
-        .orderBy(analyses.createdAt);
+        .orderBy(desc(analyses.createdAt));
 
       res.json(userAnalyses);
     } catch (error) {
+      await logError(error, userId);
       res.status(500).json({ message: "Failed to fetch analyses" });
     }
   });
 
   // Create new analysis
-  app.post("/api/analyses", async (req, res) => {
+  app.post("/api/analyses", async (req: Request, res: Response) => {
+    const userId = req.body.userId;
     try {
-      const { userId, imageUrl, results, recommendations } = req.body;
+      const { imageUrl, results, recommendations } = req.body;
 
       const [analysis] = await db.insert(analyses)
         .values({
@@ -75,7 +163,7 @@ export function registerRoutes(app: Express): Server {
 
       await db.insert(progressMetrics).values(metrics);
 
-      // Update user's streak
+      // Update user's streak and points
       const [user] = await db.select()
         .from(users)
         .where(eq(users.id, userId));
@@ -87,23 +175,20 @@ export function registerRoutes(app: Express): Server {
       if (user.lastActivityDate) {
         const daysSinceLastActivity = differenceInDays(now, new Date(user.lastActivityDate));
         if (daysSinceLastActivity <= 1) {
-          // Maintain or increase streak
           newStreak += 1;
           if (newStreak > newLongestStreak) {
             newLongestStreak = newStreak;
           }
         } else {
-          // Break streak
           newStreak = 1;
         }
       } else {
-        // First activity
         newStreak = 1;
         newLongestStreak = 1;
       }
 
       // Update user streak and points
-      const pointsEarned = 10 + (newStreak * 2); // Bonus points for streak
+      const pointsEarned = 10 + (newStreak * 2);
       const newTotalPoints = user.totalPoints + pointsEarned;
       const newLevel = Math.floor(newTotalPoints / 100) + 1;
 
@@ -125,7 +210,7 @@ export function registerRoutes(app: Express): Server {
         .values({
           userId,
           score: newTotalPoints,
-          rank: 0, // Will be updated by the ranking query
+          rank: 0,
           weekNumber,
           year,
         })
@@ -153,14 +238,15 @@ export function registerRoutes(app: Express): Server {
 
       res.json(analysis);
     } catch (error) {
+      await logError(error, userId);
       res.status(500).json({ message: "Failed to create analysis" });
     }
   });
 
   // Get user progress metrics
-  app.get("/api/progress/:userId", async (req, res) => {
+  app.get("/api/progress/:userId", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.userId);
     try {
-      const userId = parseInt(req.params.userId);
       const metrics = await db.select()
         .from(progressMetrics)
         .where(eq(progressMetrics.userId, userId))
@@ -168,15 +254,15 @@ export function registerRoutes(app: Express): Server {
 
       res.json(metrics);
     } catch (error) {
+      await logError(error, userId);
       res.status(500).json({ message: "Failed to fetch progress metrics" });
     }
   });
 
   // Get user achievements
-  app.get("/api/users/:userId/achievements", async (req, res) => {
+  app.get("/api/users/:userId/achievements", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.userId);
     try {
-      const userId = parseInt(req.params.userId);
-
       // Get user info
       const [user] = await db.select()
         .from(users)
@@ -208,12 +294,13 @@ export function registerRoutes(app: Express): Server {
         achievements: userAchievementsData,
       });
     } catch (error) {
+      await logError(error, userId);
       res.status(500).json({ message: "Failed to fetch achievements" });
     }
   });
 
   // Get leaderboard data
-  app.get("/api/leaderboard", async (req, res) => {
+  app.get("/api/leaderboard", async (req: Request, res: Response) => {
     try {
       const now = new Date();
       const weekNumber = getWeek(now);
@@ -239,15 +326,15 @@ export function registerRoutes(app: Express): Server {
 
       res.json(leaderboardData);
     } catch (error) {
+      await logError(error);
       res.status(500).json({ message: "Failed to fetch leaderboard" });
     }
   });
 
   // Get available and active challenges for a user
-  app.get("/api/users/:userId/challenges", async (req, res) => {
+  app.get("/api/users/:userId/challenges", async (req: Request, res: Response) => {
+    const userId = parseInt(req.params.userId);
     try {
-      const userId = parseInt(req.params.userId);
-
       // Get user's active challenges
       const activeChallenges = await db
         .select()
@@ -274,16 +361,16 @@ export function registerRoutes(app: Express): Server {
       // Format challenges for response
       const formattedChallenges = [
         ...activeChallenges.map(challenge => ({
-          id: challenge.challengeTemplates.id,
-          title: challenge.challengeTemplates.title,
-          description: challenge.challengeTemplates.description,
-          duration: challenge.challengeTemplates.duration,
-          pointsReward: challenge.challengeTemplates.pointsReward,
-          difficulty: challenge.challengeTemplates.difficulty,
-          status: challenge.userChallenges.status,
-          progress: challenge.userChallenges.progress,
-          startDate: challenge.userChallenges.startDate,
-          endDate: challenge.userChallenges.endDate,
+          id: challenge.challenge_templates.id,
+          title: challenge.challenge_templates.title,
+          description: challenge.challenge_templates.description,
+          duration: challenge.challenge_templates.duration,
+          pointsReward: challenge.challenge_templates.pointsReward,
+          difficulty: challenge.challenge_templates.difficulty,
+          status: challenge.user_challenges.status,
+          progress: challenge.user_challenges.progress,
+          startDate: challenge.user_challenges.startDate,
+          endDate: challenge.user_challenges.endDate,
         })),
         ...availableTemplates.map(template => ({
           id: template.id,
@@ -301,14 +388,16 @@ export function registerRoutes(app: Express): Server {
 
       res.json(formattedChallenges);
     } catch (error) {
+      await logError(error, userId);
       res.status(500).json({ message: "Failed to fetch challenges" });
     }
   });
 
   // Accept a challenge
-  app.post("/api/challenges/accept", async (req, res) => {
+  app.post("/api/challenges/accept", async (req: Request, res: Response) => {
+    const userId = req.body.userId;
     try {
-      const { userId, templateId } = req.body;
+      const { templateId } = req.body;
 
       // Get the challenge template
       const [template] = await db
@@ -324,6 +413,8 @@ export function registerRoutes(app: Express): Server {
       const startDate = new Date();
       const endDate = addDays(startDate, template.duration);
 
+      const requirements = template.requirements as { steps: Array<any> };
+
       const [userChallenge] = await db
         .insert(userChallenges)
         .values({
@@ -332,18 +423,19 @@ export function registerRoutes(app: Express): Server {
           startDate,
           endDate,
           status: 'active',
-          progress: { current: 0, total: template.requirements.steps.length },
+          progress: { current: 0, total: requirements.steps.length },
         })
         .returning();
 
       res.json(userChallenge);
     } catch (error) {
+      await logError(error, userId);
       res.status(500).json({ message: "Failed to accept challenge" });
     }
   });
 
-  // Updated route for generating skincare routines using DeepSeek
-  app.post("/api/generate-routine", async (req, res) => {
+  // Generate skincare routine using DeepSeek
+  app.post("/api/generate-routine", async (req: Request, res: Response) => {
     try {
       const { skinAnalysis, currentRoutine } = req.body;
 
@@ -356,14 +448,14 @@ export function registerRoutes(app: Express): Server {
         Pore Health Score: ${skinAnalysis.scores.poreHealth.value}
         ${currentRoutine ? `Current Products: ${currentRoutine.join(", ")}` : ""}
         Primary Concerns: ${skinAnalysis.primaryConcerns.join(", ")}
-        
+
         Focus on:
         1. Addressing the primary skin concerns
         2. Incorporating appropriate product types and active ingredients
         3. Proper ordering of products
         4. Frequency of use
         5. Consider any current routine products provided
-        
+
         Return only a JSON object with the following structure:
         {
           "morningSteps": [{ "product": string, "purpose": string, "instructions": string, "alternativeProducts": string[] }],
@@ -374,28 +466,31 @@ export function registerRoutes(app: Express): Server {
           "routineNotes": string[]
         }`;
 
-      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: "You are a skincare expert AI assistant." },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-          response_format: { type: "json_object" }
-        })
-      });
+      const response = await retryRequest(async () => {
+        const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              { role: "system", content: "You are a skincare expert AI assistant." },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+            response_format: { type: "json_object" }
+          })
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`DeepSeek API error: ${error}`);
-      }
+        if (!res.ok) {
+          throw new Error(`DeepSeek API error: ${await res.text()}`);
+        }
+
+        return res;
+      });
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
@@ -431,12 +526,13 @@ export function registerRoutes(app: Express): Server {
       res.json(processedRoutine);
     } catch (error: any) {
       console.error("Error generating routine:", error);
+      await logError(error);
       res.status(500).json({ message: "Failed to generate skincare routine. Please try again." });
     }
   });
 
   // Chat endpoint for skin concerns
-  app.post("/api/chat", async (req, res) => {
+  app.post("/api/chat", async (req: Request, res: Response) => {
     try {
       const { messages } = req.body;
 
@@ -502,8 +598,7 @@ export function registerRoutes(app: Express): Server {
         });
 
         if (!response.ok) {
-          const error = await response.text();
-          throw new Error(`DeepSeek API error: ${error}`);
+          throw new Error(`DeepSeek API error: ${await response.text()}`);
         }
 
         return response;
@@ -518,9 +613,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: content });
     } catch (error: any) {
-      const userId = req.user?.id;
-      await logChatError(error, userId);
-
+      await logError(error);
       res.status(500).json({
         message: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.",
         error: error.message
