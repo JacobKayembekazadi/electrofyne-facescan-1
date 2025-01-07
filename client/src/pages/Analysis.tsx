@@ -20,29 +20,70 @@ export default function Analysis() {
       // Mock analysis delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Mock analysis results
+      // Mock analysis results matching the expected interface
       const mockResults = {
-        skinType: "combination",
-        concerns: ["Mild Acne", "Uneven Texture", "Dark Spots"],
-        hydrationLevel: 65,
-        sensitivity: "moderate",
-        strengths: [
-          "Good overall complexion",
-          "No signs of premature aging",
-          "Well-maintained T-zone"
+        skinTone: "Type III (Medium)",
+        primaryConcerns: ["Mild Acne", "Uneven Texture", "Dark Spots"],
+        scores: {
+          hydration: {
+            value: 75,
+            label: "Hydration",
+            description: "Your skin's moisture retention capacity"
+          },
+          texture: {
+            value: 65,
+            label: "Texture",
+            description: "Overall smoothness and consistency"
+          },
+          elasticity: {
+            value: 80,
+            label: "Elasticity",
+            description: "Skin's ability to bounce back"
+          },
+          pigmentation: {
+            value: 70,
+            label: "Pigmentation",
+            description: "Even distribution of melanin"
+          },
+          poreHealth: {
+            value: 60,
+            label: "Pore Health",
+            description: "Size and cleanliness of pores"
+          },
+          overall: {
+            value: 72,
+            label: "Overall Health",
+            description: "Combined skin health score"
+          }
+        },
+        recommendations: [
+          {
+            category: "Hydration",
+            items: [
+              "Use a hyaluronic acid serum",
+              "Apply moisturizer while skin is damp"
+            ]
+          },
+          {
+            category: "Texture",
+            items: [
+              "Gentle exfoliation 2-3 times per week",
+              "Use products with niacinamide"
+            ]
+          }
         ],
         imageUrl: URL.createObjectURL(file),
         annotations: [
           {
             x: 35,
             y: 45,
-            type: "Hydration",
+            type: "hydration",
             description: "Slight dryness detected in this area"
           },
           {
             x: 65,
             y: 30,
-            type: "Texture",
+            type: "texture",
             description: "Minor uneven texture present"
           }
         ]
