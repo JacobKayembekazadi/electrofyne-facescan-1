@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import ImageUpload from "../components/ImageUpload";
 import AnalysisResults from "../components/AnalysisResults";
 import ProductRecommendations from "../components/ProductRecommendations";
 import DailySkinTracker from "../components/DailySkinTracker";
+import ARSkinVisualization from "../components/ARSkinVisualization";
 import { useToast } from "@/hooks/use-toast";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
@@ -11,6 +12,7 @@ type AnalysisStage = "upload" | "analyzing" | "complete";
 export default function Analysis() {
   const [stage, setStage] = useState<AnalysisStage>("upload");
   const [results, setResults] = useState<any>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
   const handleImageUpload = async (file: File) => {
@@ -120,7 +122,18 @@ export default function Analysis() {
 
           {stage === "complete" && results && (
             <div className="space-y-8">
-              <AnalysisResults results={results} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <AnalysisResults results={results} />
+                <div className="space-y-4">
+                  <ARSkinVisualization 
+                    videoRef={videoRef} 
+                    analysisResults={results}
+                  />
+                  <p className="text-sm text-muted-foreground text-center">
+                    Move your head slightly to see the AR visualization from different angles
+                  </p>
+                </div>
+              </div>
               <ProductRecommendations results={results} />
             </div>
           )}
