@@ -4,22 +4,15 @@ import { Link } from "wouter";
 import { ScanLine, Shield, Sparkles, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import EducationModules from "../components/EducationModules";
-import SkinTypeQuiz from "../components/SkinTypeQuiz";
-import { useState } from "react";
 import ProductRecommendations from "../components/ProductRecommendations";
 
+// Mock initial results for demonstration
+const initialResults = {
+  skinType: "combination",
+  concerns: ["hydration", "texture"]
+};
+
 export default function Home() {
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [quizResults, setQuizResults] = useState<{
-    skinType: string;
-    concerns: string[];
-  } | null>(null);
-
-  const handleQuizComplete = (results: { skinType: string; concerns: string[] }) => {
-    setQuizResults(results);
-    setQuizCompleted(true);
-  };
-
   return (
     <div className="max-w-6xl mx-auto">
       <section className="text-center py-16">
@@ -29,25 +22,22 @@ export default function Home() {
         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
           Get personalized skincare recommendations powered by advanced AI technology
         </p>
-        <div className="space-y-4">
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-lg font-medium">Start with a quick skin type assessment:</p>
-            <SkinTypeQuiz onComplete={handleQuizComplete} />
-          </div>
-          {quizCompleted && quizResults && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8"
-            >
-              <ProductRecommendations results={quizResults} />
-            </motion.div>
-          )}
+        <Link href="/analysis">
+          <Button size="lg">
+            Start Your Analysis
+          </Button>
+        </Link>
+      </section>
+
+      {/* Product Recommendations Section */}
+      <section className="py-12 bg-primary/5 rounded-3xl mb-16">
+        <div className="max-w-5xl mx-auto px-4">
+          <ProductRecommendations results={initialResults} />
         </div>
       </section>
 
       {/* New Skin Analysis Section */}
-      <section className="py-16 bg-primary/5 rounded-3xl mb-16">
+      <section className="py-16 bg-background rounded-3xl mb-16">
         <div className="max-w-4xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
