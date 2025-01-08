@@ -10,6 +10,8 @@ import ImageComparisonSlider from "../components/ImageComparisonSlider";
 import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import RoutineOptimizer from "../components/RoutineOptimizer";
+import { Button } from "@/components/ui/button";
+import { Camera } from "lucide-react";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
 
@@ -148,12 +150,19 @@ export default function Analysis() {
     }
   };
 
+  const handleRetake = () => {
+    setStage("upload");
+    setResults(null);
+    setTextureResults(null);
+    setBeforeImage("");
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-3xl font-bold text-center mb-8">Skin Analysis</h1>
 
-      <div className="grid gap-8">
-        <Card className="p-6">
+      <div className="grid gap-6">
+        <Card className="p-4 md:p-6">
           {stage === "upload" && (
             <ImageUpload onUpload={handleImageUpload} />
           )}
@@ -166,8 +175,20 @@ export default function Analysis() {
           )}
 
           {stage === "complete" && results && (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              {/* Retake Button */}
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetake}
+                  className="gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  Retake Photo
+                </Button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
                 <AnalysisResults results={results} />
                 <ProductRecommendations results={results} />
               </div>
@@ -175,19 +196,23 @@ export default function Analysis() {
               <RoutineOptimizer skinAnalysis={results} />
 
               {beforeImage && (
-                <ImageComparisonSlider
-                  beforeImage={beforeImage}
-                  afterImage={beforeImage}
-                  beforeLabel="Initial Scan"
-                  afterLabel="Current"
-                />
+                <div className="rounded-lg overflow-hidden">
+                  <ImageComparisonSlider
+                    beforeImage={beforeImage}
+                    afterImage={beforeImage}
+                    beforeLabel="Initial Scan"
+                    afterLabel="Current"
+                  />
+                </div>
               )}
 
               {textureResults && (
-                <TextureAnalysisView
-                  textureMap={textureResults.textureMap}
-                  originalImage={textureResults.originalImage}
-                />
+                <div className="rounded-lg overflow-hidden">
+                  <TextureAnalysisView
+                    textureMap={textureResults.textureMap}
+                    originalImage={textureResults.originalImage}
+                  />
+                </div>
               )}
 
               <RoutineProgressAnimation

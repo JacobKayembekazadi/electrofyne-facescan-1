@@ -43,29 +43,33 @@ const MOCK_PRODUCTS = [
 export default function ProductRecommendations({ results }: ProductRecommendationsProps) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-1">
         <CardTitle>Recommended Products</CardTitle>
         <CardDescription>
           Based on your skin analysis, we recommend these products
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {MOCK_PRODUCTS.map((product) => (
-            <Card key={product.id}>
-              <CardContent className="p-4">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-                <h3 className="font-semibold mb-2">{product.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {product.description}
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">${product.price}</span>
-                  <Button>Add to Cart</Button>
+            <Card key={product.id} className="flex flex-col h-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="aspect-square mb-4 rounded-lg overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold line-clamp-2">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="font-medium">${product.price}</span>
+                    <Button size="sm">Add to Cart</Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -73,7 +77,7 @@ export default function ProductRecommendations({ results }: ProductRecommendatio
         </div>
         <div className="mt-6 text-center">
           <Link href="/products">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
               View All Recommendations
             </Button>
           </Link>
