@@ -4,8 +4,22 @@ import { Link } from "wouter";
 import { ScanLine, Shield, Sparkles, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import EducationModules from "../components/EducationModules";
+import SkinTypeQuiz from "../components/SkinTypeQuiz";
+import { useState } from "react";
+import ProductRecommendations from "../components/ProductRecommendations";
 
 export default function Home() {
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizResults, setQuizResults] = useState<{
+    skinType: string;
+    concerns: string[];
+  } | null>(null);
+
+  const handleQuizComplete = (results: { skinType: string; concerns: string[] }) => {
+    setQuizResults(results);
+    setQuizCompleted(true);
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <section className="text-center py-16">
@@ -15,11 +29,21 @@ export default function Home() {
         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
           Get personalized skincare recommendations powered by advanced AI technology
         </p>
-        <Link href="/analysis">
-          <Button size="lg" className="text-lg">
-            Start Your Analysis
-          </Button>
-        </Link>
+        <div className="space-y-4">
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-lg font-medium">Start with a quick skin type assessment:</p>
+            <SkinTypeQuiz onComplete={handleQuizComplete} />
+          </div>
+          {quizCompleted && quizResults && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8"
+            >
+              <ProductRecommendations results={quizResults} />
+            </motion.div>
+          )}
+        </div>
       </section>
 
       {/* New Skin Analysis Section */}
@@ -111,40 +135,6 @@ export default function Home() {
                       </motion.div>
                     ))}
                   </div>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Hydration Level</span>
-                      <motion.div 
-                        className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden"
-                        initial={{ width: 0 }}
-                        animate={{ width: "8rem" }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      >
-                        <motion.div 
-                          className="h-full bg-primary"
-                          initial={{ width: "0%" }}
-                          animate={{ width: "75%" }}
-                          transition={{ duration: 1, delay: 1 }}
-                        />
-                      </motion.div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Texture Analysis</span>
-                      <motion.div 
-                        className="w-32 h-2 bg-primary/20 rounded-full overflow-hidden"
-                        initial={{ width: 0 }}
-                        animate={{ width: "8rem" }}
-                        transition={{ duration: 1, delay: 0.7 }}
-                      >
-                        <motion.div 
-                          className="h-full bg-primary"
-                          initial={{ width: "0%" }}
-                          animate={{ width: "80%" }}
-                          transition={{ duration: 1, delay: 1.2 }}
-                        />
-                      </motion.div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -190,26 +180,7 @@ export default function Home() {
         </Card>
       </section>
 
-      <section className="grid md:grid-cols-2 gap-12 py-16 items-center">
-        <div>
-          <img
-            src="https://images.unsplash.com/photo-1591130901921-3f0652bb3915"
-            alt="Skincare products"
-            className="rounded-lg shadow-lg"
-          />
-        </div>
-        <div>
-          <h2 className="text-3xl font-bold mb-6">Science-Backed Solutions</h2>
-          <p className="text-lg text-muted-foreground mb-6">
-            Our AI-powered platform combines cutting-edge technology with dermatological expertise to provide you with accurate analysis and effective product recommendations.
-          </p>
-          <Link href="/analysis">
-            <Button>Get Started</Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Education Modules Section - Now placed after Science-Backed Solutions */}
+      {/* Education Modules Section */}
       <section className="py-16 bg-primary/5 rounded-3xl mb-16">
         <div className="max-w-5xl mx-auto px-4">
           <EducationModules />
