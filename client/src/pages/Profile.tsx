@@ -48,104 +48,124 @@ const mockUser = {
 
 export default function Profile() {
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Profile Header - Optimized for mobile */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="order-1">
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <p className="text-lg">{mockUser.name}</p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Profile Header - Optimized for mobile */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="order-1">
+            <CardHeader>
+              <CardTitle className="text-xl sm:text-2xl">Profile Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <p className="text-lg">{mockUser.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p className="text-lg">{mockUser.email}</p>
+                </div>
+                <Button className="w-full sm:w-auto min-h-[44px]">Edit Profile</Button>
               </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <p className="text-lg">{mockUser.email}</p>
-              </div>
-              <Button className="w-full">Edit Profile</Button>
-            </div>
+            </CardContent>
+          </Card>
+
+          <div className="order-2">
+            <Leaderboard userId={mockUser.id} />
+          </div>
+        </div>
+
+        {/* Routine Progress - Full width on mobile */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <RoutineProgressAnimation 
+              morningSteps={mockUser.routineProgress.morningSteps}
+              eveningSteps={mockUser.routineProgress.eveningSteps}
+              streak={mockUser.routineProgress.streak}
+              lastCompletedAt={mockUser.routineProgress.lastCompletedAt}
+            />
           </CardContent>
         </Card>
 
-        <div className="order-2">
-          <Leaderboard userId={mockUser.id} />
-        </div>
-      </div>
+        {/* Progress Timeline - Full width on mobile */}
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <SkinProgressTimeline userId={mockUser.id} />
+          </CardContent>
+        </Card>
 
-      {/* Routine Progress - Full width on mobile */}
-      <div className="rounded-lg overflow-hidden">
-        <RoutineProgressAnimation 
-          morningSteps={mockUser.routineProgress.morningSteps}
-          eveningSteps={mockUser.routineProgress.eveningSteps}
-          streak={mockUser.routineProgress.streak}
-          lastCompletedAt={mockUser.routineProgress.lastCompletedAt}
-        />
-      </div>
-
-      {/* Progress Timeline - Full width on mobile */}
-      <div className="rounded-lg overflow-hidden">
-        <SkinProgressTimeline userId={mockUser.id} />
-      </div>
-
-      {/* Dashboards and Challenges - Stack on mobile, side by side on desktop */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <HealthDashboard userId={mockUser.id} />
-          <div className="overflow-x-hidden">
-            <Challenges userId={mockUser.id} />
+        {/* Dashboards and Challenges - Stack on mobile, side by side on desktop */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <Card className="overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <HealthDashboard userId={mockUser.id} />
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <Challenges userId={mockUser.id} />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card className="overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <Achievements userId={mockUser.id} />
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <ProgressDashboard userId={mockUser.id} />
+              </CardContent>
+            </Card>
           </div>
         </div>
-        <div className="space-y-6">
-          <Achievements userId={mockUser.id} />
-          <ProgressDashboard userId={mockUser.id} />
-        </div>
-      </div>
 
-      {/* Analysis History - Better spacing on mobile */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Analysis History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {mockUser.analysisHistory.map((analysis) => (
-              <Card key={analysis.id}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <p className="font-medium">Analysis on {analysis.date}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {analysis.concerns.map((concern) => (
-                          <span
-                            key={concern}
-                            className="px-2 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                          >
-                            {concern}
-                          </span>
-                        ))}
+        {/* Analysis History - Better spacing on mobile */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl sm:text-2xl">Analysis History</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <div className="space-y-4">
+              {mockUser.analysisHistory.map((analysis) => (
+                <Card key={analysis.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <p className="font-medium">Analysis on {analysis.date}</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {analysis.concerns.map((concern) => (
+                            <span
+                              key={concern}
+                              className="px-2 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                            >
+                              {concern}
+                            </span>
+                          ))}
+                        </div>
                       </div>
+                      <div>
+                        <p className="text-sm font-medium mb-2">Recommended Products:</p>
+                        <ul className="list-disc list-inside text-sm text-muted-foreground">
+                          {analysis.recommendations.map((product) => (
+                            <li key={product} className="break-words">{product}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto min-h-[40px]">
+                        View Details
+                      </Button>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium mb-2">Recommended Products:</p>
-                      <ul className="list-disc list-inside text-sm text-muted-foreground">
-                        {analysis.recommendations.map((product) => (
-                          <li key={product} className="break-words">{product}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
