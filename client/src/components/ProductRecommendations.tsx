@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 interface ProductRecommendationsProps {
   results: {
@@ -69,6 +70,13 @@ export default function ProductRecommendations({ results }: ProductRecommendatio
               </CardContent>
             </Card>
           ))}
+        </div>
+        <div className="mt-6 text-center">
+          <Link href="/products">
+            <Button variant="outline" size="lg">
+              View All Recommendations
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

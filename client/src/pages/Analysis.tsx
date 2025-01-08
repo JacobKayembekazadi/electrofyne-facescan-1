@@ -172,6 +172,8 @@ export default function Analysis() {
                 <ProductRecommendations results={results} />
               </div>
 
+              <RoutineOptimizer skinAnalysis={results} />
+
               {beforeImage && (
                 <ImageComparisonSlider
                   beforeImage={beforeImage}
@@ -187,8 +189,6 @@ export default function Analysis() {
                   originalImage={textureResults.originalImage}
                 />
               )}
-
-              <RoutineOptimizer skinAnalysis={results} />
 
               <RoutineProgressAnimation
                 {...routineData}
