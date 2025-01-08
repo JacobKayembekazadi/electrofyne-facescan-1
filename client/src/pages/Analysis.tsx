@@ -158,11 +158,11 @@ export default function Analysis() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
+    <div className="container mx-auto px-4 py-6">
       <h1 className="text-3xl font-bold text-center mb-8">Skin Analysis</h1>
 
-      <div className="grid gap-6">
-        <Card className="p-4 md:p-6">
+      <div className="grid gap-8">
+        <Card className="p-6">
           {stage === "upload" && (
             <ImageUpload onUpload={handleImageUpload} />
           )}
@@ -175,7 +175,7 @@ export default function Analysis() {
           )}
 
           {stage === "complete" && results && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Retake Button */}
               <div className="flex justify-end">
                 <Button 
@@ -188,31 +188,26 @@ export default function Analysis() {
                 </Button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <AnalysisResults results={results} />
-                <ProductRecommendations results={results} />
-              </div>
+              <AnalysisResults results={results} />
+
+              <ProductRecommendations results={results} />
 
               <RoutineOptimizer skinAnalysis={results} />
 
               {beforeImage && (
-                <div className="rounded-lg overflow-hidden">
-                  <ImageComparisonSlider
-                    beforeImage={beforeImage}
-                    afterImage={beforeImage}
-                    beforeLabel="Initial Scan"
-                    afterLabel="Current"
-                  />
-                </div>
+                <ImageComparisonSlider
+                  beforeImage={beforeImage}
+                  afterImage={beforeImage}
+                  beforeLabel="Initial Scan"
+                  afterLabel="Current"
+                />
               )}
 
               {textureResults && (
-                <div className="rounded-lg overflow-hidden">
-                  <TextureAnalysisView
-                    textureMap={textureResults.textureMap}
-                    originalImage={textureResults.originalImage}
-                  />
-                </div>
+                <TextureAnalysisView
+                  textureMap={textureResults.textureMap}
+                  originalImage={textureResults.originalImage}
+                />
               )}
 
               <RoutineProgressAnimation
