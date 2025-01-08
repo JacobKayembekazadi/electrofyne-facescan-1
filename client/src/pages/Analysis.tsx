@@ -158,71 +158,78 @@ export default function Analysis() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-center mb-8">Skin Analysis</h1>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Skin Analysis</h1>
 
-      <div className="grid gap-8">
-        <Card className="p-6">
-          {stage === "upload" && (
-            <ImageUpload onUpload={handleImageUpload} />
-          )}
+        <div className="grid gap-6 sm:gap-8">
+          <Card className="p-4 sm:p-6 shadow-lg">
+            {stage === "upload" && (
+              <ImageUpload onUpload={handleImageUpload} />
+            )}
 
-          {stage === "analyzing" && (
-            <div className="text-center py-12">
-              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-lg">Analyzing your skin...</p>
-            </div>
-          )}
-
-          {stage === "complete" && results && (
-            <div className="space-y-8">
-              {/* Retake Button */}
-              <div className="flex justify-end">
-                <Button 
-                  variant="outline" 
-                  onClick={handleRetake}
-                  className="gap-2"
-                >
-                  <Camera className="w-4 h-4" />
-                  Retake Photo
-                </Button>
+            {stage === "analyzing" && (
+              <div className="text-center py-8 sm:py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-lg">Analyzing your skin...</p>
               </div>
+            )}
 
-              <AnalysisResults results={results} />
+            {stage === "complete" && results && (
+              <div className="space-y-6 sm:space-y-8">
+                {/* Retake Button */}
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRetake}
+                    className="gap-2 min-h-[48px] px-6"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span className="hidden sm:inline">Retake Photo</span>
+                    <span className="sm:hidden">Retake</span>
+                  </Button>
+                </div>
 
-              <ProductRecommendations results={results} />
+                <AnalysisResults results={results} />
 
-              <RoutineOptimizer skinAnalysis={results} />
+                <ProductRecommendations results={results} />
 
-              {beforeImage && (
-                <ImageComparisonSlider
-                  beforeImage={beforeImage}
-                  afterImage={beforeImage}
-                  beforeLabel="Initial Scan"
-                  afterLabel="Current"
+                <RoutineOptimizer skinAnalysis={results} />
+
+                {beforeImage && (
+                  <div className="rounded-lg overflow-hidden">
+                    <ImageComparisonSlider
+                      beforeImage={beforeImage}
+                      afterImage={beforeImage}
+                      beforeLabel="Initial Scan"
+                      afterLabel="Current"
+                    />
+                  </div>
+                )}
+
+                {textureResults && (
+                  <div className="rounded-lg overflow-hidden">
+                    <TextureAnalysisView
+                      textureMap={textureResults.textureMap}
+                      originalImage={textureResults.originalImage}
+                    />
+                  </div>
+                )}
+
+                <RoutineProgressAnimation
+                  {...routineData}
+                  onStepComplete={handleStepComplete}
                 />
-              )}
+              </div>
+            )}
+          </Card>
 
-              {textureResults && (
-                <TextureAnalysisView
-                  textureMap={textureResults.textureMap}
-                  originalImage={textureResults.originalImage}
-                />
-              )}
-
-              <RoutineProgressAnimation
-                {...routineData}
-                onStepComplete={handleStepComplete}
-              />
+          {stage === "complete" && (
+            <div className="animate-fade-in">
+              <DailySkinTracker />
             </div>
           )}
-        </Card>
-
-        {stage === "complete" && (
-          <div className="animate-fade-in">
-            <DailySkinTracker />
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
