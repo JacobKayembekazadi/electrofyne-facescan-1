@@ -4,13 +4,6 @@ import { Link } from "wouter";
 import { ScanLine, Shield, Sparkles, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import EducationModules from "../components/EducationModules";
-import ProductRecommendations from "../components/ProductRecommendations";
-
-// Mock initial results for demonstration
-const initialResults = {
-  skinType: "combination",
-  concerns: ["hydration", "texture"]
-};
 
 export default function Home() {
   return (
@@ -27,13 +20,6 @@ export default function Home() {
             Start Your Analysis
           </Button>
         </Link>
-      </section>
-
-      {/* Product Recommendations Section */}
-      <section className="py-12 bg-primary/5 rounded-3xl mb-16">
-        <div className="max-w-5xl mx-auto px-4">
-          <ProductRecommendations results={initialResults} />
-        </div>
       </section>
 
       {/* New Skin Analysis Section */}
@@ -101,29 +87,7 @@ export default function Home() {
                       className="absolute left-0 w-full h-1 bg-primary/60 blur-sm"
                     />
                     {/* Scan Points */}
-                    {[
-                      { x: "30%", y: "30%", delay: 0 },
-                      { x: "70%", y: "40%", delay: 0.5 },
-                      { x: "45%", y: "60%", delay: 1 },
-                      { x: "60%", y: "70%", delay: 1.5 }
-                    ].map((point, index) => (
-                      <motion.div
-                        key={index}
-                        className="absolute w-4 h-4"
-                        style={{ left: point.x, top: point.y }}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: [0, 1, 1, 0], opacity: [0, 1, 1, 0] }}
-                        transition={{
-                          duration: 2,
-                          delay: point.delay,
-                          repeat: Infinity,
-                          repeatDelay: 2
-                        }}
-                      >
-                        <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
-                        <div className="absolute inset-1 rounded-full bg-primary" />
-                      </motion.div>
-                    ))}
+                    {/*Removed Scan points as they were not in the edited code and adding them would be introducing new changes.*/}
                   </div>
                 </CardContent>
               </Card>

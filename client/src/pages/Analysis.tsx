@@ -7,25 +7,17 @@ import DailySkinTracker from "../components/DailySkinTracker";
 import TextureAnalysisView from "../components/TextureAnalysisView";
 import RoutineProgressAnimation from "../components/RoutineProgressAnimation";
 import ImageComparisonSlider from "../components/ImageComparisonSlider";
-import SkinTypeQuiz from "../components/SkinTypeQuiz";
 import { analyzeTexture } from "../utils/textureAnalysis";
 import { useToast } from "@/hooks/use-toast";
 import RoutineOptimizer from "../components/RoutineOptimizer";
 
-type AnalysisStage = "quiz" | "upload" | "analyzing" | "complete";
-
-interface SkinTypeResult {
-  type: string;
-  description: string;
-  recommendations: string[];
-}
+type AnalysisStage = "upload" | "analyzing" | "complete";
 
 export default function Analysis() {
-  const [stage, setStage] = useState<AnalysisStage>("quiz");
+  const [stage, setStage] = useState<AnalysisStage>("upload");
   const [results, setResults] = useState<any>(null);
   const [textureResults, setTextureResults] = useState<any>(null);
   const [beforeImage, setBeforeImage] = useState<string>("");
-  const [skinType, setSkinType] = useState<SkinTypeResult | null>(null);
   const [routineData, setRoutineData] = useState({
     morningSteps: [
       { id: "1", name: "Cleanser", completed: false, timeOfDay: "morning" as const },
@@ -45,28 +37,9 @@ export default function Analysis() {
   });
   const { toast } = useToast();
 
-  const handleQuizComplete = (result: SkinTypeResult) => {
-    setSkinType(result);
-    setStage("upload");
-    toast({
-      title: `Your Skin Type: ${result.type}`,
-      description: result.description,
-      duration: 5000,
-    });
-  };
-
-  const handleSkipQuiz = () => {
-    setStage("upload");
-    toast({
-      title: "Quiz Skipped",
-      description: "You can always take the skin type quiz later from your profile.",
-      duration: 3000,
-    });
-  };
-
   const handleStepComplete = (stepId: string, completed: boolean) => {
     setRoutineData(prev => {
-      const updateSteps = (steps: typeof prev.morningSteps) =>
+      const updateSteps = (steps: typeof routineData.morningSteps) =>
         steps.map(step =>
           step.id === stepId
             ? { ...step, completed, completedAt: completed ? new Date() : undefined }
@@ -181,10 +154,6 @@ export default function Analysis() {
 
       <div className="grid gap-8">
         <Card className="p-6">
-          {stage === "quiz" && (
-            <SkinTypeQuiz onComplete={handleQuizComplete} onSkip={handleSkipQuiz} />
-          )}
-
           {stage === "upload" && (
             <ImageUpload onUpload={handleImageUpload} />
           )}
@@ -200,15 +169,17 @@ export default function Analysis() {
             <div className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <AnalysisResults results={results} />
-                {beforeImage && (
-                  <ImageComparisonSlider
-                    beforeImage={beforeImage}
-                    afterImage={beforeImage}
-                    beforeLabel="Initial Scan"
-                    afterLabel="Current"
-                  />
-                )}
+                <ProductRecommendations results={results} />
               </div>
+
+              {beforeImage && (
+                <ImageComparisonSlider
+                  beforeImage={beforeImage}
+                  afterImage={beforeImage}
+                  beforeLabel="Initial Scan"
+                  afterLabel="Current"
+                />
+              )}
 
               {textureResults && (
                 <TextureAnalysisView
@@ -217,27 +188,12 @@ export default function Analysis() {
                 />
               )}
 
-              {skinType && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Your Skin Type: {skinType.type}</h3>
-                  <p className="text-muted-foreground mb-4">{skinType.description}</p>
-                  <h4 className="font-medium mb-2">Recommended Care Tips:</h4>
-                  <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-                    {skinType.recommendations.map((tip, index) => (
-                      <li key={index}>{tip}</li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-
               <RoutineOptimizer skinAnalysis={results} />
 
               <RoutineProgressAnimation
                 {...routineData}
                 onStepComplete={handleStepComplete}
               />
-
-              <ProductRecommendations results={results} />
             </div>
           )}
         </Card>
