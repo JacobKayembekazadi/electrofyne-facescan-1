@@ -14,25 +14,41 @@ import { Button } from "@/components/ui/button";
 import { Camera } from "lucide-react";
 
 type AnalysisStage = "upload" | "analyzing" | "complete";
+type TimeOfDay = "morning" | "evening";
+
+interface RoutineStep {
+  id: string;
+  name: string;
+  completed: boolean;
+  timeOfDay: TimeOfDay;
+  completedAt?: Date;
+}
+
+interface RoutineData {
+  morningSteps: RoutineStep[];
+  eveningSteps: RoutineStep[];
+  streak: number;
+  lastCompletedAt: Date;
+}
 
 export default function Analysis() {
   const [stage, setStage] = useState<AnalysisStage>("upload");
   const [results, setResults] = useState<any>(null);
   const [textureResults, setTextureResults] = useState<any>(null);
   const [beforeImage, setBeforeImage] = useState<string>("");
-  const [routineData, setRoutineData] = useState({
+  const [routineData, setRoutineData] = useState<RoutineData>({
     morningSteps: [
-      { id: "1", name: "Cleanser", completed: false, timeOfDay: "morning" as const },
-      { id: "2", name: "Toner", completed: false, timeOfDay: "morning" as const },
-      { id: "3", name: "Serum", completed: false, timeOfDay: "morning" as const },
-      { id: "4", name: "Moisturizer", completed: false, timeOfDay: "morning" as const },
-      { id: "5", name: "Sunscreen", completed: false, timeOfDay: "morning" as const },
+      { id: "1", name: "Cleanser", completed: false, timeOfDay: "morning" },
+      { id: "2", name: "Toner", completed: false, timeOfDay: "morning" },
+      { id: "3", name: "Serum", completed: false, timeOfDay: "morning" },
+      { id: "4", name: "Moisturizer", completed: false, timeOfDay: "morning" },
+      { id: "5", name: "Sunscreen", completed: false, timeOfDay: "morning" },
     ],
     eveningSteps: [
-      { id: "6", name: "Makeup Remover", completed: false, timeOfDay: "evening" as const },
-      { id: "7", name: "Cleanser", completed: false, timeOfDay: "evening" as const },
-      { id: "8", name: "Treatment", completed: false, timeOfDay: "evening" as const },
-      { id: "9", name: "Night Cream", completed: false, timeOfDay: "evening" as const },
+      { id: "6", name: "Makeup Remover", completed: false, timeOfDay: "evening" },
+      { id: "7", name: "Cleanser", completed: false, timeOfDay: "evening" },
+      { id: "8", name: "Treatment", completed: false, timeOfDay: "evening" },
+      { id: "9", name: "Night Cream", completed: false, timeOfDay: "evening" },
     ],
     streak: 3,
     lastCompletedAt: new Date(),
@@ -41,17 +57,17 @@ export default function Analysis() {
 
   const handleStepComplete = (stepId: string, completed: boolean) => {
     setRoutineData(prev => {
-      const updateSteps = (steps: typeof routineData.morningSteps) =>
-        steps.map(step =>
-          step.id === stepId
-            ? { ...step, completed, completedAt: completed ? new Date() : undefined }
-            : step
-        );
+      const newMorningSteps = prev.morningSteps.map(step =>
+        step.id === stepId ? { ...step, completed, completedAt: completed ? new Date() : undefined } : step
+      );
+      const newEveningSteps = prev.eveningSteps.map(step =>
+        step.id === stepId ? { ...step, completed, completedAt: completed ? new Date() : undefined } : step
+      );
 
       return {
         ...prev,
-        morningSteps: updateSteps(prev.morningSteps),
-        eveningSteps: updateSteps(prev.eveningSteps),
+        morningSteps: newMorningSteps,
+        eveningSteps: newEveningSteps,
         lastCompletedAt: new Date(),
       };
     });
