@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import Navigation from "./components/Navigation";
 import GlobalChat from "./components/GlobalChat";
 import OnboardingTutorial from "./components/OnboardingTutorial";
+import BottomNav from "./components/BottomNav";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Analysis from "./pages/Analysis";
 import Profile from "./pages/Profile";
@@ -13,9 +15,9 @@ import About from "./pages/About";
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navigation />
-        <main className="container mx-auto px-4 py-8">
+        <main className="flex-1">
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/analysis" component={Analysis} />
@@ -23,6 +25,8 @@ function App() {
             <Route path="/about" component={About} />
           </Switch>
         </main>
+        <Footer />
+        <BottomNav />
         <GlobalChat />
         <OnboardingTutorial />
         <Toaster />
