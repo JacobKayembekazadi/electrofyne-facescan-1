@@ -6,6 +6,14 @@ import { motion } from "framer-motion";
 import EducationModules from "../components/EducationModules";
 
 export default function Home() {
+  const CtaButton = () => (
+    <Link href="/analysis">
+      <Button size="lg" className="min-h-[48px] px-8 w-full sm:w-auto">
+        Start Free Analysis
+      </Button>
+    </Link>
+  );
+
   return (
     <div className="max-w-6xl mx-auto">
       <section className="text-center py-16 md:py-24">
@@ -55,9 +63,10 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Tailored Skincare Solutions</h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground mb-8">
               Every skin type has unique needs. Our AI adapts to yours.
             </p>
+            <CtaButton />
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {[
@@ -89,10 +98,17 @@ export default function Home() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 flex flex-col">
                     <solution.icon className="w-10 h-10 text-primary mb-4" />
                     <h3 className="text-xl font-semibold mb-2">{solution.title}</h3>
-                    <p className="text-muted-foreground">{solution.description}</p>
+                    <p className="text-muted-foreground mb-4">{solution.description}</p>
+                    <div className="mt-auto">
+                      <Link href="/analysis">
+                        <Button variant="outline" className="w-full">
+                          Analyze Your Skin
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -104,7 +120,13 @@ export default function Home() {
       {/* Social Proof Section */}
       <section className="py-16 bg-primary/5 rounded-3xl mb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-8">Join Thousands of Happy Users</h2>
+          <h2 className="text-3xl font-bold mb-4">Join Thousands of Happy Users</h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            Experience the transformation yourself
+          </p>
+          <div className="mb-12">
+            <CtaButton />
+          </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
@@ -152,6 +174,9 @@ export default function Home() {
       {/* Education Modules Section */}
       <section className="py-16 bg-background rounded-3xl mb-16">
         <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <CtaButton />
+          </div>
           <EducationModules />
         </div>
       </section>
@@ -165,11 +190,7 @@ export default function Home() {
           <p className="text-lg text-muted-foreground mb-8">
             Join the future of personalized skincare. Start your analysis today and discover the power of AI-driven beauty.
           </p>
-          <Link href="/analysis">
-            <Button size="lg" className="min-h-[48px] px-8">
-              Get Your Free Analysis
-            </Button>
-          </Link>
+          <CtaButton />
         </div>
       </section>
     </div>
