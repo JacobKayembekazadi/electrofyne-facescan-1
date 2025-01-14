@@ -20,8 +20,10 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? false : true,
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Increase payload size limit for image uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Session middleware
 app.use(session({

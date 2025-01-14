@@ -1,9 +1,6 @@
 import { Switch, Route } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
-import { Toaster } from "@/components/ui/toaster";
 import Navigation from "./components/Navigation";
 import BottomNav from "./components/BottomNav";
 import Footer from "./components/Footer";
@@ -11,6 +8,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Products from "./pages/Products";
 import Education from "./pages/Education";
+import Analysis from "./pages/Analysis";
 
 function NotFound() {
   return (
@@ -32,23 +30,21 @@ function NotFound() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background flex flex-col">
-        <Navigation />
-        <main className="flex-1">
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/about" component={About} />
-            <Route path="/products" component={Products} />
-            <Route path="/education" component={Education} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-        <Footer />
-        <BottomNav />
-        <Toaster />
-      </div>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navigation />
+      <main className="flex-1">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/about" component={About} />
+          <Route path="/products" component={Products} />
+          <Route path="/education" component={Education} />
+          <Route path="/analysis" component={Analysis} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+      <Footer />
+      <BottomNav />
+    </div>
   );
 }
 
