@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
 import { ScanLine, Shield, Sparkles, Camera, Users, Award, Star } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
@@ -13,29 +13,31 @@ import gsap from "gsap";
 export default function Home() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const subheadingRef = useRef<HTMLParagraphElement>(null);
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
   useEffect(() => {
     if (headingRef.current && subheadingRef.current) {
       gsap.fromTo(
         headingRef.current,
-        { opacity: 0, y: 30 },
+        { opacity: 0, y: 50 },
         {
           opacity: 1,
           y: 0,
-          duration: 1,
-          ease: "power3.out",
+          duration: 1.2,
+          ease: "power4.out",
         }
       );
 
       gsap.fromTo(
         subheadingRef.current,
-        { opacity: 0, y: 20 },
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
-          duration: 1,
+          duration: 1.2,
           delay: 0.3,
-          ease: "power3.out",
+          ease: "power4.out",
         }
       );
     }
@@ -46,9 +48,12 @@ export default function Home() {
       <Button
         size="lg"
         className={cn(
-          "min-h-[48px] px-8 w-full sm:w-auto relative overflow-hidden transition-all duration-300",
-          "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-primary/0 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-500",
-          "hover:scale-105 hover:shadow-lg",
+          "min-h-[54px] px-8 w-full sm:w-auto relative overflow-hidden transition-all duration-500",
+          "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary",
+          "before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/10 before:to-transparent",
+          "before:translate-x-[-200%] hover:before:translate-x-[200%] before:transition-transform before:duration-700",
+          "hover:scale-105 hover:shadow-lg hover:shadow-primary/20",
+          "backdrop-blur-sm",
           className
         )}
       >
@@ -58,75 +63,87 @@ export default function Home() {
   );
 
   return (
-    <div className="w-full mb-16 md:mb-0">
-      {/* Hero Section with Glassmorphism */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5 backdrop-blur-xl" />
-        <div className="container mx-auto px-4">
+    <div className="w-full">
+      {/* Hero Section with Enhanced Glassmorphism */}
+      <section className="relative min-h-screen py-24 overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5"
+          style={{ opacity }}
+        >
+          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+        </motion.div>
+        <div className="absolute inset-0 backdrop-blur-xl" />
+        <div className="container relative z-10 mx-auto px-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="relative z-10 text-center space-y-6 max-w-6xl mx-auto"
+            transition={{ duration: 1 }}
+            className="text-center space-y-8 max-w-6xl mx-auto"
           >
             <h1
               ref={headingRef}
-              className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6"
+              className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/60"
             >
               Your Skin, Perfected by AI
             </h1>
             <p
               ref={subheadingRef}
-              className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
+              className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto"
             >
               Advanced skin analysis for personalized care at your fingertips
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <CtaButton />
               <Link href="/about">
                 <Button
                   size="lg"
                   variant="outline"
-                  className="min-h-[48px] px-8 w-full sm:w-auto hover:bg-primary/5 transition-colors duration-300"
+                  className="min-h-[54px] px-8 w-full sm:w-auto hover:bg-primary/5 transition-all duration-300
+                    border-primary/20 hover:border-primary/40 backdrop-blur-sm"
                 >
                   Learn More About Our AI
                 </Button>
               </Link>
             </div>
 
-            {/* Trust Signals */}
+            {/* Enhanced Trust Signals */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="flex flex-wrap justify-center gap-8 mt-12"
+              transition={{ delay: 0.7, duration: 0.7 }}
+              className="flex flex-wrap justify-center gap-8 mt-16"
             >
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">10K+ Happy Users</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">98% Satisfaction Rate</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Leading AI Technology</span>
-              </div>
+              {[
+                { icon: Users, text: "10K+ Happy Users" },
+                { icon: Star, text: "98% Satisfaction Rate" },
+                { icon: Award, text: "Leading AI Technology" },
+              ].map((item, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 backdrop-blur-sm"
+                >
+                  <item.icon className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-primary/80">{item.text}</span>
+                </motion.div>
+              ))}
             </motion.div>
 
-            {/* AI Scan Animation */}
+            {/* Enhanced AI Scan Animation */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="max-w-md mx-auto mt-8"
+              transition={{ delay: 0.5, duration: 0.7 }}
+              className="max-w-md mx-auto mt-12"
             >
-              <Lottie
-                animationData={aiScanAnimation}
-                loop
-                className="w-full h-64"
-              />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
+                <Lottie
+                  animationData={aiScanAnimation}
+                  loop
+                  className="w-full h-64"
+                />
+              </div>
             </motion.div>
           </motion.div>
         </div>
