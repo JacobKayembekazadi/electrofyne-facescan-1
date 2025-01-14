@@ -27,7 +27,9 @@ export default function Navigation() {
           <div className="flex items-center gap-2">
             <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" />
             <Link href="/">
-              <span className="font-bold text-lg cursor-pointer">Electrofyne</span>
+              <Button variant="link" className="font-bold text-lg p-0">
+                Electrofyne
+              </Button>
             </Link>
           </div>
 
@@ -35,27 +37,28 @@ export default function Navigation() {
           <nav className="hidden md:flex items-center gap-6">
             {navigationLinks.map((link) => (
               <Link key={link.href} href={link.href}>
-                <span className={`cursor-pointer ${
-                  location === link.href 
-                    ? "text-primary font-medium" 
-                    : "text-muted-foreground hover:text-primary transition-colors"
-                }`}>
+                <Button
+                  variant="link"
+                  className={`p-0 ${
+                    location === link.href 
+                      ? "text-primary font-medium" 
+                      : "text-muted-foreground hover:text-primary"
+                  }`}
+                >
                   {link.label}
-                </span>
+                </Button>
               </Link>
             ))}
             <div className="flex items-center gap-4 pl-4">
               <Link href="/profile">
-                <span className="cursor-pointer">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
-                    <User className="h-5 w-5" />
-                  </Button>
-                </span>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <User className="h-5 w-5" />
+                </Button>
               </Link>
               <Link href="/analysis">
-                <span className="cursor-pointer">
-                  <Button size="sm" className="min-h-[36px]">Start Analysis</Button>
-                </span>
+                <Button size="sm" className="min-h-[36px]">
+                  Start Analysis
+                </Button>
               </Link>
             </div>
           </nav>
@@ -63,11 +66,9 @@ export default function Navigation() {
           {/* Mobile Navigation */}
           <div className="flex items-center gap-4 md:hidden">
             <Link href="/profile">
-              <span className="cursor-pointer">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <User className="h-5 w-5" />
-                </Button>
-              </span>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <User className="h-5 w-5" />
+              </Button>
             </Link>
             <Sheet>
               <SheetTrigger asChild>
@@ -82,19 +83,20 @@ export default function Navigation() {
                 <nav className="flex flex-col gap-4 mt-6">
                   {navigationLinks.map((link) => (
                     <Link key={link.href} href={link.href}>
-                      <span className={`block px-4 py-3 rounded-md transition-colors ${
-                        location === link.href
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-accent"
-                      }`}>
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start ${
+                          location === link.href
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:bg-accent"
+                        }`}
+                      >
                         {link.label}
-                      </span>
+                      </Button>
                     </Link>
                   ))}
                   <Link href="/analysis">
-                    <span className="block w-full mt-2">
-                      <Button className="w-full">Start Analysis</Button>
-                    </span>
+                    <Button className="w-full">Start Analysis</Button>
                   </Link>
                 </nav>
               </SheetContent>
