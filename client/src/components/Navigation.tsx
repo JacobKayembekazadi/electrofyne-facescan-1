@@ -8,8 +8,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -23,66 +21,33 @@ export default function Navigation() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <motion.div 
-        className="container mx-auto px-4"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between">
           <Link href="/">
-            <Button variant="link" className="p-0 flex items-center gap-2 group">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-              >
-                <ScanLine className="h-5 w-5 sm:h-6 sm:w-6 text-primary group-hover:text-primary/80" />
-              </motion.div>
-              <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
-                Electrofyne
-              </span>
+            <Button variant="link" className="p-0 flex items-center gap-2">
+              <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="font-bold text-lg">Electrofyne</span>
             </Button>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            {navigationLinks.map((link) => {
-              const isActive = location === link.href;
-              return (
-                <Link key={link.href} href={link.href}>
-                  <motion.div
-                    className={cn(
-                      "relative py-1 cursor-pointer",
-                      isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-primary transition-colors"
-                    )}
-                    whileHover={{ y: -1 }}
-                  >
-                    {link.label}
-                    {isActive && (
-                      <motion.div
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                        layoutId="navIndicator"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                  </motion.div>
-                </Link>
-              );
-            })}
-            <div className="flex items-center gap-4 pl-4 border-l border-primary/10">
+            {navigationLinks.map((link) => (
+              <Link key={link.href} href={link.href}>
+                <a className={location === link.href ? "text-primary font-medium" : "text-muted-foreground hover:text-primary transition-colors"}>
+                  {link.label}
+                </a>
+              </Link>
+            ))}
+            <div className="flex items-center gap-4 pl-4">
               <Link href="/profile">
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/5">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/analysis">
-                <Button 
-                  size="sm" 
-                  className="min-h-[36px] bg-primary/90 hover:bg-primary transition-colors"
-                >
-                  Start Analysis
-                </Button>
+                <Button size="sm" className="min-h-[36px]">Start Analysis</Button>
               </Link>
             </div>
           </nav>
@@ -90,50 +55,41 @@ export default function Navigation() {
           {/* Mobile Navigation */}
           <div className="flex items-center gap-4 md:hidden">
             <Link href="/profile">
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/5">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
                 <User className="h-5 w-5" />
               </Button>
             </Link>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/5">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-background/95 backdrop-blur-lg">
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
-                  <SheetTitle className="text-primary">Menu</SheetTitle>
+                  <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-6">
-                  {navigationLinks.map((link) => {
-                    const isActive = location === link.href;
-                    return (
-                      <Link key={link.href} href={link.href}>
-                        <motion.div 
-                          className={`px-4 py-3 rounded-md transition-colors cursor-pointer ${
-                            isActive
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground hover:bg-primary/5"
-                          }`}
-                          whileHover={{ x: 4 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {link.label}
-                        </motion.div>
-                      </Link>
-                    );
-                  })}
+                  {navigationLinks.map((link) => (
+                    <Link key={link.href} href={link.href}>
+                      <a className={`px-4 py-3 rounded-md transition-colors ${
+                        location === link.href
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-accent"
+                      }`}>
+                        {link.label}
+                      </a>
+                    </Link>
+                  ))}
                   <Link href="/analysis">
-                    <Button className="w-full mt-2 bg-primary/90 hover:bg-primary transition-colors">
-                      Start Analysis
-                    </Button>
+                    <Button className="w-full mt-2">Start Analysis</Button>
                   </Link>
                 </nav>
               </SheetContent>
             </Sheet>
           </div>
         </div>
-      </motion.div>
+      </div>
     </header>
   );
 }

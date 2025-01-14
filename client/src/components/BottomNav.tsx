@@ -1,7 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Home, Scan, BookOpen, ShoppingBag, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 export default function BottomNav() {
   const [location] = useLocation();
@@ -15,7 +14,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t border-primary/10 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
       <nav className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -23,37 +22,23 @@ export default function BottomNav() {
 
           return (
             <Link key={item.href} href={item.href}>
-              <motion.div
-                className="flex flex-col items-center justify-center w-full h-full group cursor-pointer"
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div
-                  className="relative"
-                  initial={false}
-                  animate={isActive ? {
-                    scale: 1.1,
-                    transition: { type: "spring", stiffness: 300 }
-                  } : { scale: 1 }}
-                >
+              <a className="flex flex-col items-center justify-center w-full h-full group">
+                <div className="relative">
                   <Icon className={cn(
                     "w-5 h-5 mb-1 transition-colors duration-200",
                     isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/80"
                   )} />
                   {isActive && (
-                    <motion.div
-                      className="absolute -inset-2 bg-primary/10 rounded-full -z-10"
-                      layoutId="bottomNavIndicator"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
+                    <div className="absolute -inset-1 bg-primary/10 rounded-full -z-10" />
                   )}
-                </motion.div>
+                </div>
                 <span className={cn(
                   "text-xs transition-colors duration-200",
                   isActive ? "text-primary font-medium" : "text-muted-foreground group-hover:text-primary/80"
                 )}>
                   {item.label}
                 </span>
-              </motion.div>
+              </a>
             </Link>
           );
         })}

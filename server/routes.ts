@@ -6,26 +6,6 @@ import { eq, desc, and, sql } from "drizzle-orm";
 import { differenceInDays, startOfWeek, getWeek, getYear, addDays } from "date-fns";
 import { setTimeout } from "timers/promises";
 
-// Type declarations for better type safety
-interface ChallengeTemplate {
-  id: number;
-  title: string;
-  description: string;
-  duration: number;
-  pointsReward: number;
-  difficulty: string;
-  requirements: {
-    steps: Array<any>;
-  };
-}
-
-interface UserWithAuth extends Express.Request {
-  user?: {
-    id: number;
-    // Add other user properties as needed
-  };
-}
-
 // Add error logging function
 async function logChatError(error: any, userId?: number) {
   try {
@@ -294,16 +274,16 @@ export function registerRoutes(app: Express): Server {
       // Format challenges for response
       const formattedChallenges = [
         ...activeChallenges.map(challenge => ({
-          id: challenge.challenge_templates.id,
-          title: challenge.challenge_templates.title,
-          description: challenge.challenge_templates.description,
-          duration: challenge.challenge_templates.duration,
-          pointsReward: challenge.challenge_templates.pointsReward,
-          difficulty: challenge.challenge_templates.difficulty,
-          status: challenge.user_challenges.status,
-          progress: challenge.user_challenges.progress,
-          startDate: challenge.user_challenges.startDate,
-          endDate: challenge.user_challenges.endDate,
+          id: challenge.challengeTemplates.id,
+          title: challenge.challengeTemplates.title,
+          description: challenge.challengeTemplates.description,
+          duration: challenge.challengeTemplates.duration,
+          pointsReward: challenge.challengeTemplates.pointsReward,
+          difficulty: challenge.challengeTemplates.difficulty,
+          status: challenge.userChallenges.status,
+          progress: challenge.userChallenges.progress,
+          startDate: challenge.userChallenges.startDate,
+          endDate: challenge.userChallenges.endDate,
         })),
         ...availableTemplates.map(template => ({
           id: template.id,
@@ -334,7 +314,7 @@ export function registerRoutes(app: Express): Server {
       const [template] = await db
         .select()
         .from(challengeTemplates)
-        .where(eq(challengeTemplates.id, templateId)) as [ChallengeTemplate];
+        .where(eq(challengeTemplates.id, templateId));
 
       if (!template) {
         return res.status(404).json({ message: "Challenge template not found" });
@@ -459,7 +439,6 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/chat", async (req, res) => {
     try {
       const { messages } = req.body;
-      const userId = (req as UserWithAuth).user?.id;
 
       const systemMessage = `You are a knowledgeable skincare expert assistant for Electrofyne AI Face Scan App. Your role is to:
         1. Start with a friendly greeting and explain you're here to help discover the best products for their skin
@@ -475,33 +454,33 @@ export function registerRoutes(app: Express): Server {
         5. Keep responses concise but informative (2-3 paragraphs maximum)
         6. Focus on gathering relevant information about skin conditions
         7. Remind users that their data and photos are secure and will not be shared
-        
+
         For common skin concerns:
-        
+
         1. Pimples/Acne:
         "It looks like you may be dealing with acne, which can occur when your pores become clogged with oil, dead skin cells, or bacteria. Stress, diet, or hormones can also play a role. You might want to consider using gentle products that target blemishes and reduce inflammation. I recommend our LED Face Mask to reduce breakouts and help calm the skin."
-        
+
         2. Wrinkles/Signs of Aging:
         "Wrinkles are a natural part of aging, but they can be made more visible by factors like sun exposure, dehydration, or even genetics. Using products that help boost collagen and hydrate your skin can minimize their appearance. Our Facial Sculptor helps with tightening and lifting, while our Hydrating Facial Toner can boost skin moisture."
-        
+
         3. Dry Skin:
         "Dry skin often occurs when your skin loses moisture, which can be caused by environmental factors, skincare products, or health conditions. The good news is that moisturizing is key! Look for products that provide hydration and lock in moisture, like our Hydrating Facial Toner and Facial Sculptor."
-        
+
         4. Oily Skin:
         "Oily skin happens when your sebaceous glands produce excess sebum. This can lead to clogged pores and acne. The key is to balance oil production without stripping your skin of necessary moisture. Our Facial Toner can help balance oil, while the LED Face Mask can help keep pores clean."
-        
+
         5. Sensitive Skin:
         "Sensitive skin can react to various factors, such as harsh weather, certain skincare products, or even food. It's important to use gentle, soothing products that don't irritate the skin. Our Facial Sculptor is designed to be gentle, and the LED Face Mask uses light therapy to calm and reduce inflammation."
-        
+
         If this is their first message, greet them with:
         "Hi there! I'm your personalized skincare assistant, here to help you discover the best products for your skin. Ready for a skin analysis? It only takes a few moments!"
-        
+
         For photo guidance, say:
         "Make sure you're in a well-lit area and that your face is clearly visible in the frame. Your skin should be visible and free from heavy makeup!"
-        
+
         For complex concerns, recommend consulting a dermatologist:
         "While I can provide general guidance, your skin concern might benefit from professional medical advice. I recommend consulting with a dermatologist for a personalized treatment plan. In the meantime, I can suggest some gentle products that might help."
-        
+
         Always maintain a friendly, professional tone and focus on actionable advice.`;
 
       const chatResponse = await retryRequest(async () => {
@@ -539,7 +518,8 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: content });
     } catch (error: any) {
-      await logChatError(error, (req as UserWithAuth).user?.id);
+      const userId = req.user?.id;
+      await logChatError(error, userId);
 
       res.status(500).json({
         message: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.",
