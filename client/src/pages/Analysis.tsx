@@ -1,87 +1,24 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import ImageUpload from "../components/ImageUpload";
+import FaceAnalysisView from "../components/FaceAnalysisView";
 import AnalysisResults from "../components/AnalysisResults";
 import ProductRecommendations from "../components/ProductRecommendations";
 import DailySkinTracker from "../components/DailySkinTracker";
-import TextureAnalysisView from "../components/TextureAnalysisView";
-import RoutineProgressAnimation from "../components/RoutineProgressAnimation";
-import ImageComparisonSlider from "../components/ImageComparisonSlider";
-import { analyzeTexture } from "../utils/textureAnalysis";
-import { useToast } from "@/hooks/use-toast";
-import RoutineOptimizer from "../components/RoutineOptimizer";
 import { Button } from "@/components/ui/button";
-import { Camera } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-type AnalysisStage = "upload" | "analyzing" | "complete";
-type TimeOfDay = "morning" | "evening";
-
-interface RoutineStep {
-  id: string;
-  name: string;
-  completed: boolean;
-  timeOfDay: TimeOfDay;
-  completedAt?: Date;
-}
-
-interface RoutineData {
-  morningSteps: RoutineStep[];
-  eveningSteps: RoutineStep[];
-  streak: number;
-  lastCompletedAt: Date;
-}
+type AnalysisStage = "capture" | "analyzing" | "complete";
 
 export default function Analysis() {
-  const [stage, setStage] = useState<AnalysisStage>("upload");
+  const [stage, setStage] = useState<AnalysisStage>("capture");
   const [results, setResults] = useState<any>(null);
-  const [textureResults, setTextureResults] = useState<any>(null);
-  const [beforeImage, setBeforeImage] = useState<string>("");
-  const [routineData, setRoutineData] = useState<RoutineData>({
-    morningSteps: [
-      { id: "1", name: "Cleanser", completed: false, timeOfDay: "morning" },
-      { id: "2", name: "Toner", completed: false, timeOfDay: "morning" },
-      { id: "3", name: "Serum", completed: false, timeOfDay: "morning" },
-      { id: "4", name: "Moisturizer", completed: false, timeOfDay: "morning" },
-      { id: "5", name: "Sunscreen", completed: false, timeOfDay: "morning" },
-    ],
-    eveningSteps: [
-      { id: "6", name: "Makeup Remover", completed: false, timeOfDay: "evening" },
-      { id: "7", name: "Cleanser", completed: false, timeOfDay: "evening" },
-      { id: "8", name: "Treatment", completed: false, timeOfDay: "evening" },
-      { id: "9", name: "Night Cream", completed: false, timeOfDay: "evening" },
-    ],
-    streak: 3,
-    lastCompletedAt: new Date(),
-  });
   const { toast } = useToast();
 
-  const handleStepComplete = (stepId: string, completed: boolean) => {
-    setRoutineData(prev => {
-      const newMorningSteps = prev.morningSteps.map(step =>
-        step.id === stepId ? { ...step, completed, completedAt: completed ? new Date() : undefined } : step
-      );
-      const newEveningSteps = prev.eveningSteps.map(step =>
-        step.id === stepId ? { ...step, completed, completedAt: completed ? new Date() : undefined } : step
-      );
-
-      return {
-        ...prev,
-        morningSteps: newMorningSteps,
-        eveningSteps: newEveningSteps,
-        lastCompletedAt: new Date(),
-      };
-    });
-  };
-
-  const handleImageUpload = async (file: File) => {
+  const handleAnalysisComplete = async (analysisData: any) => {
     try {
       setStage("analyzing");
-      const imageUrl = URL.createObjectURL(file);
-      setBeforeImage(imageUrl);
 
-      const textureMap = await analyzeTexture(imageUrl);
-      setTextureResults({ textureMap, originalImage: imageUrl });
-
+      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const mockResults = {
@@ -94,7 +31,7 @@ export default function Analysis() {
             description: "Your skin's moisture retention capacity"
           },
           texture: {
-            value: 100 - textureMap.overallTexture,
+            value: 85,
             label: "Texture",
             description: "Overall smoothness and consistency"
           },
@@ -109,24 +46,19 @@ export default function Analysis() {
             description: "Even distribution of melanin"
           },
           poreHealth: {
-            value: Math.max(0, 100 - (textureMap.poreSize * 2)),
+            value: 82,
             label: "Pore Health",
             description: "Size and cleanliness of pores"
-          },
-          overall: {
-            value: 72,
-            label: "Overall Health",
-            description: "Combined skin health score"
           }
         },
+        detectedIssues: analysisData.skinIssues,
         recommendations: [
           {
             category: "Texture Improvement",
             items: [
-              textureMap.poreSize > 20 ? "Use a pore-minimizing toner" : "Continue with current pore care routine",
-              textureMap.lineDepth > 50 ? "Add retinol to reduce fine lines" : "Focus on prevention with antioxidants",
-              "Gentle exfoliation 2-3 times per week",
-              "Use products with niacinamide"
+              "Use a pore-minimizing toner",
+              "Add retinol to reduce fine lines",
+              "Gentle exfoliation 2-3 times per week"
             ]
           },
           {
@@ -136,21 +68,6 @@ export default function Analysis() {
               "Apply moisturizer while skin is damp"
             ]
           }
-        ],
-        imageUrl: imageUrl,
-        annotations: [
-          {
-            x: 35,
-            y: 45,
-            type: "hydration",
-            description: "Slight dryness detected in this area"
-          },
-          {
-            x: 65,
-            y: 30,
-            type: "texture",
-            description: "Minor uneven texture present"
-          }
         ]
       };
 
@@ -159,29 +76,29 @@ export default function Analysis() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to analyze image. Please try again.",
+        description: "Failed to analyze skin. Please try again.",
         variant: "destructive",
       });
-      setStage("upload");
+      setStage("capture");
     }
   };
 
-  const handleRetake = () => {
-    setStage("upload");
+  const handleReset = () => {
+    setStage("capture");
     setResults(null);
-    setTextureResults(null);
-    setBeforeImage("");
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Skin Analysis</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">
+          Skin Analysis
+        </h1>
 
         <div className="grid gap-6 sm:gap-8">
           <Card className="p-4 sm:p-6 shadow-lg">
-            {stage === "upload" && (
-              <ImageUpload onUpload={handleImageUpload} />
+            {stage === "capture" && (
+              <FaceAnalysisView onAnalysisComplete={handleAnalysisComplete} />
             )}
 
             {stage === "analyzing" && (
@@ -193,49 +110,18 @@ export default function Analysis() {
 
             {stage === "complete" && results && (
               <div className="space-y-6 sm:space-y-8">
-                {/* Retake Button */}
                 <div className="flex justify-end">
                   <Button 
-                    variant="outline" 
-                    onClick={handleRetake}
-                    className="gap-2 min-h-[48px] px-6"
+                    onClick={handleReset}
+                    variant="outline"
+                    className="gap-2"
                   >
-                    <Camera className="w-5 h-5" />
-                    <span className="hidden sm:inline">Retake Photo</span>
-                    <span className="sm:hidden">Retake</span>
+                    New Analysis
                   </Button>
                 </div>
 
                 <AnalysisResults results={results} />
-
                 <ProductRecommendations results={results} />
-
-                <RoutineOptimizer skinAnalysis={results} />
-
-                {beforeImage && (
-                  <div className="rounded-lg overflow-hidden">
-                    <ImageComparisonSlider
-                      beforeImage={beforeImage}
-                      afterImage={beforeImage}
-                      beforeLabel="Initial Scan"
-                      afterLabel="Current"
-                    />
-                  </div>
-                )}
-
-                {textureResults && (
-                  <div className="rounded-lg overflow-hidden">
-                    <TextureAnalysisView
-                      textureMap={textureResults.textureMap}
-                      originalImage={textureResults.originalImage}
-                    />
-                  </div>
-                )}
-
-                <RoutineProgressAnimation
-                  {...routineData}
-                  onStepComplete={handleStepComplete}
-                />
               </div>
             )}
           </Card>

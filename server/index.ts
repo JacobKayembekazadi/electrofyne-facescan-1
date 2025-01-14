@@ -1,10 +1,19 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";
 import { setupVite, serveStatic, log } from "./vite";
 import { registerRoutes } from "./routes";
+import session from "express-session";
+import MemoryStore from "memorystore";
 
 // Initialize express app
 const app = express();
+
+// Create HTTP server
+const server = createServer(app);
+
+// Session store setup
+const SessionStore = MemoryStore(session);
 
 // Basic middleware
 app.use(cors({
@@ -13,6 +22,20 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Session middleware
+app.use(session({
+  secret: 'electrofyne-secret',
+  resave: false,
+  saveUninitialized: false,
+  store: new SessionStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -32,7 +55,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 // Register API routes
-const server = registerRoutes(app);
+registerRoutes(app);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
