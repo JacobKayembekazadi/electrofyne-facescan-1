@@ -19,17 +19,22 @@ export default function BottomNav() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
-          
+
           return (
             <Link key={item.href} href={item.href}>
-              <a className="flex flex-col items-center justify-center w-full h-full">
-                <Icon className={cn(
-                  "w-5 h-5 mb-1",
-                  isActive ? "text-primary" : "text-muted-foreground"
-                )} />
+              <a className="flex flex-col items-center justify-center w-full h-full group">
+                <div className="relative">
+                  <Icon className={cn(
+                    "w-5 h-5 mb-1 transition-colors duration-200",
+                    isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/80"
+                  )} />
+                  {isActive && (
+                    <div className="absolute -inset-1 bg-primary/10 rounded-full -z-10" />
+                  )}
+                </div>
                 <span className={cn(
-                  "text-xs",
-                  isActive ? "text-primary font-medium" : "text-muted-foreground"
+                  "text-xs transition-colors duration-200",
+                  isActive ? "text-primary font-medium" : "text-muted-foreground group-hover:text-primary/80"
                 )}>
                   {item.label}
                 </span>

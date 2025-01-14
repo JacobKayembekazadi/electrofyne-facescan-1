@@ -48,11 +48,11 @@ const mockUser = {
 
 export default function Profile() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Profile Header - Optimized for mobile */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="order-1">
+          <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl sm:text-2xl">Profile Information</CardTitle>
             </CardHeader>
@@ -71,13 +71,17 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          <div className="order-2">
-            <Leaderboard userId={mockUser.id} />
+          <div>
+            <Card className="shadow-lg h-full">
+              <CardContent className="p-4 sm:p-6">
+                <Leaderboard userId={mockUser.id} />
+              </CardContent>
+            </Card>
           </div>
         </div>
 
         {/* Routine Progress - Full width on mobile */}
-        <Card className="overflow-hidden">
+        <Card className="shadow-lg overflow-hidden">
           <CardContent className="p-4 sm:p-6">
             <RoutineProgressAnimation 
               morningSteps={mockUser.routineProgress.morningSteps}
@@ -89,7 +93,7 @@ export default function Profile() {
         </Card>
 
         {/* Progress Timeline - Full width on mobile */}
-        <Card className="overflow-hidden">
+        <Card className="shadow-lg overflow-hidden">
           <CardContent className="p-4 sm:p-6">
             <SkinProgressTimeline userId={mockUser.id} />
           </CardContent>
@@ -98,24 +102,24 @@ export default function Profile() {
         {/* Dashboards and Challenges - Stack on mobile, side by side on desktop */}
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
-            <Card className="overflow-hidden">
+            <Card className="shadow-lg overflow-hidden">
               <CardContent className="p-4 sm:p-6">
                 <HealthDashboard userId={mockUser.id} />
               </CardContent>
             </Card>
-            <Card className="overflow-hidden">
+            <Card className="shadow-lg overflow-hidden">
               <CardContent className="p-4 sm:p-6">
                 <Challenges userId={mockUser.id} />
               </CardContent>
             </Card>
           </div>
           <div className="space-y-6">
-            <Card className="overflow-hidden">
+            <Card className="shadow-lg overflow-hidden">
               <CardContent className="p-4 sm:p-6">
                 <Achievements userId={mockUser.id} />
               </CardContent>
             </Card>
-            <Card className="overflow-hidden">
+            <Card className="shadow-lg overflow-hidden">
               <CardContent className="p-4 sm:p-6">
                 <ProgressDashboard userId={mockUser.id} />
               </CardContent>
@@ -124,14 +128,14 @@ export default function Profile() {
         </div>
 
         {/* Analysis History - Better spacing on mobile */}
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl">Analysis History</CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <div className="space-y-4">
               {mockUser.analysisHistory.map((analysis) => (
-                <Card key={analysis.id} className="overflow-hidden">
+                <Card key={analysis.id} className="shadow overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-4">
                       <div>

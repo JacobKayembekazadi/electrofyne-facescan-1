@@ -15,13 +15,15 @@ export default function Navigation() {
   const navigationLinks = [
     { href: "/", label: "Home" },
     { href: "/analysis", label: "Analysis" },
+    { href: "/education", label: "Learn" },
+    { href: "/products", label: "Products" },
     { href: "/about", label: "About Us" },
   ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="flex flex-1 items-center justify-between">
+      <div className="container mx-auto px-4">
+        <div className="flex h-14 items-center justify-between">
           <Link href="/">
             <Button variant="link" className="p-0 flex items-center gap-2">
               <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -38,14 +40,14 @@ export default function Navigation() {
                 </a>
               </Link>
             ))}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 pl-4">
               <Link href="/profile">
                 <Button variant="ghost" size="icon" className="h-9 w-9">
                   <User className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/analysis">
-                <Button>Start Analysis</Button>
+                <Button size="sm" className="min-h-[36px]">Start Analysis</Button>
               </Link>
             </div>
           </nav>
@@ -70,7 +72,7 @@ export default function Navigation() {
                 <nav className="flex flex-col gap-4 mt-6">
                   {navigationLinks.map((link) => (
                     <Link key={link.href} href={link.href}>
-                      <a className={`px-2 py-3 rounded-md transition-colors ${
+                      <a className={`px-4 py-3 rounded-md transition-colors ${
                         location === link.href
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-muted-foreground hover:bg-accent"
