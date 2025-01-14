@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 import * as faceDetection from '@tensorflow-models/face-detection';
+import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import { Camera } from '@mediapipe/camera_utils';
 import { FaceMesh } from '@mediapipe/face_mesh';
 import { Card } from '@/components/ui/card';
@@ -31,6 +32,7 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const faceMeshRef = useRef<FaceMesh | null>(null);
   const detectorRef = useRef<faceDetection.FaceDetector | null>(null);
+  const landmarkModelRef = useRef<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const cameraRef = useRef<Camera | null>(null);
   const animationFrameRef = useRef<number>();
 
@@ -38,12 +40,11 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
     const initializeModels = async () => {
       try {
         console.log('Initializing TensorFlow.js...');
-        // Initialize TensorFlow.js with WebGL backend
         await tf.setBackend('webgl');
         await tf.ready();
         console.log('TensorFlow.js initialized');
 
-        // Initialize face detector
+        // Load face detection model
         console.log('Loading face detection model...');
         detectorRef.current = await faceDetection.createDetector(
           faceDetection.SupportedModels.MediaPipeFaceDetector,
@@ -54,6 +55,19 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
           }
         );
         console.log('Face detection model loaded');
+
+        // Load face landmarks model
+        console.log('Loading face landmarks model...');
+        landmarkModelRef.current = await faceLandmarksDetection.createDetector(
+          faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
+          {
+            runtime: 'mediapipe',
+            maxFaces: 1,
+            refineLandmarks: true,
+            solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh'
+          }
+        );
+        console.log('Face landmarks model loaded');
 
         // Initialize face mesh
         console.log('Initializing face mesh...');
@@ -70,11 +84,8 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
           minTrackingConfidence: 0.5
         });
 
-        // Set up video
+        // Set up video and camera
         if (videoRef.current) {
-          videoRef.current.width = 640;
-          videoRef.current.height = 480;
-
           try {
             const stream = await navigator.mediaDevices.getUserMedia({
               video: {
@@ -84,16 +95,14 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
               }
             });
             videoRef.current.srcObject = stream;
-            videoRef.current.play();
+            await videoRef.current.play();
             setIsVideoReady(true);
 
-            // Initialize camera after video is ready
+            // Initialize camera
             console.log('Setting up camera...');
             cameraRef.current = new Camera(videoRef.current, {
               onFrame: async () => {
-                if (faceMeshRef.current && videoRef.current) {
-                  await faceMeshRef.current.send({ image: videoRef.current });
-                }
+                await processFrame();
               },
               width: 640,
               height: 480
@@ -103,8 +112,6 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
             await cameraRef.current.start();
             console.log('Camera started');
 
-            // Set up face mesh results handler
-            faceMeshRef.current.onResults(onResults);
           } catch (err) {
             console.error('Camera access error:', err);
             setError('Unable to access camera. Please ensure camera permissions are granted.');
@@ -122,7 +129,6 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
 
     initializeModels();
 
-    // Cleanup function
     return () => {
       if (cameraRef.current) {
         cameraRef.current.stop();
@@ -140,53 +146,63 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
     };
   }, []);
 
-  const onResults = async (results: any) => {
-    const canvasCtx = canvasRef.current?.getContext('2d');
-    if (!canvasCtx || !canvasRef.current) return;
+  const processFrame = async () => {
+    if (!videoRef.current || !canvasRef.current || !detectorRef.current || !landmarkModelRef.current) return;
 
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    try {
+      // Detect face
+      const faces = await detectorRef.current.estimateFaces(videoRef.current);
 
-    // Draw the video frame first
-    if (videoRef.current) {
-      canvasCtx.drawImage(
-        videoRef.current,
-        0,
-        0,
-        canvasRef.current.width,
-        canvasRef.current.height
-      );
-    }
+      if (faces.length === 0) return;
 
-    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-      for (const landmarks of results.multiFaceLandmarks) {
-        // Draw face mesh
-        drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, { 
-          color: 'rgba(255,255,255,0.5)',
-          lineWidth: 1 
-        });
+      const face = faces[0];
+
+      // Get face landmarks
+      const landmarks = await landmarkModelRef.current.estimateFaces(videoRef.current);
+
+      if (landmarks.length === 0) return;
+
+      const faceLandmarks = landmarks[0].keypoints;
+
+      // Draw results
+      const ctx = canvasRef.current.getContext('2d');
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+      // Draw video frame
+      ctx.drawImage(videoRef.current, 0, 0);
+
+      // Draw face detection box
+      if (face.box) {
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(face.box.xMin, face.box.yMin, face.box.width, face.box.height);
       }
 
+      // Draw landmarks
+      drawFaceMesh(ctx, faceLandmarks);
+
+      // If analyzing, process skin analysis
       if (isAnalyzing) {
-        await analyzeSkinRegions(results.multiFaceLandmarks[0]);
+        await analyzeSkin(ctx, faceLandmarks);
       }
 
-      // Draw detected skin issues
-      drawSkinIssues(canvasCtx);
+      // Draw detected issues
+      drawSkinIssues(ctx);
+
+    } catch (error) {
+      console.error('Frame processing error:', error);
     }
 
-    canvasCtx.restore();
+    // Request next frame
+    animationFrameRef.current = requestAnimationFrame(processFrame);
   };
 
-  const analyzeSkinRegions = async (landmarks: any) => {
-    if (!canvasRef.current || !landmarks) return;
-
-    const ctx = canvasRef.current.getContext('2d');
-    if (!ctx) return;
-
+  const analyzeSkin = async (ctx: CanvasRenderingContext2D, landmarks: any[]) => {
     const issues: SkinIssue[] = [];
-    const width = canvasRef.current.width;
-    const height = canvasRef.current.height;
+    const width = canvasRef.current!.width;
+    const height = canvasRef.current!.height;
 
     // Define regions to analyze
     const regions = [
@@ -230,20 +246,17 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
 
     switch (type) {
       case 'dryness':
-        // Calculate average brightness
         const brightness = calculateAverageBrightness(data);
         severity = 1 - (brightness / 255);
         description = 'Analyzing skin hydration';
         break;
 
       case 'pigmentation':
-        // Calculate color variance
         severity = calculateColorVariance(data);
         description = 'Detecting pigmentation variations';
         break;
 
       case 'wrinkles':
-        // Edge detection for wrinkles
         severity = detectEdges(imageData);
         description = 'Analyzing fine lines';
         break;
@@ -285,6 +298,36 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
     }
 
     return edges / (imageData.width * imageData.height);
+  };
+
+  const drawFaceMesh = (ctx: CanvasRenderingContext2D, landmarks: any[]) => {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i < landmarks.length; i++) {
+      const x = landmarks[i].x * ctx.canvas.width;
+      const y = landmarks[i].y * ctx.canvas.height;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 1, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // Draw connections between landmarks
+    for (const connection of FACEMESH_TESSELATION) {
+      const [i, j] = connection;
+      const start = landmarks[i];
+      const end = landmarks[j];
+
+      if (start && end) {
+        ctx.beginPath();
+        ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+        ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+        ctx.stroke();
+      }
+    }
   };
 
   const drawSkinIssues = (ctx: CanvasRenderingContext2D) => {
@@ -329,7 +372,7 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
   };
 
   const startAnalysis = async () => {
-    if (!detectorRef.current || !faceMeshRef.current) {
+    if (!detectorRef.current || !landmarkModelRef.current) {
       setError('Face detection not initialized. Please refresh the page.');
       return;
     }
@@ -419,39 +462,14 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
   );
 }
 
-// Helper function to draw face mesh
-function drawConnectors(ctx: CanvasRenderingContext2D, landmarks: any[], connections: any[], style: any) {
-  const canvas = ctx.canvas;
-  for (const connection of connections) {
-    const [i, j] = connection;
-    const kp1 = landmarks[i];
-    const kp2 = landmarks[j];
-
-    if (!kp1 || !kp2) continue;
-
-    ctx.beginPath();
-    ctx.moveTo(kp1.x * canvas.width, kp1.y * canvas.height);
-    ctx.lineTo(kp2.x * canvas.width, kp2.y * canvas.height);
-    ctx.strokeStyle = style.color;
-    ctx.lineWidth = style.lineWidth;
-    ctx.stroke();
-  }
-}
-
-// Face mesh connections
+// Face mesh connections for visualization
 const FACEMESH_TESSELATION = [
   [127, 34], [34, 139], [139, 127], [11, 0], [0, 37], [37, 11],
   [10, 109], [109, 67], [67, 10], [338, 297], [297, 332], [332, 338],
-  [141, 175], [175, 151], [151, 141], [140, 176], [176, 152], [152, 140],
-  [234, 93], [93, 132], [132, 234], [133, 235], [235, 94], [94, 133],
-  [33, 7], [7, 163], [163, 33], [163, 144], [144, 107], [107, 163],
-  [263, 110], [110, 337], [337, 263], [263, 337], [337, 300], [300, 263],
-  [300, 236], [236, 362], [362, 300], [362, 389], [389, 264], [264, 362],
-  [21, 54], [54, 103], [103, 21], [61, 291], [291, 199], [199, 61],
-  [78, 95], [95, 88], [88, 78], [78, 88], [88, 95], [95, 78],
-  [151, 135], [135, 141], [141, 151], [152, 136], [136, 140], [140, 152],
-  [172, 118], [118, 131], [131, 172], [118, 172], [172, 131], [131, 118],
-  [264, 389], [389, 373], [373, 264], [373, 264], [264, 373], [373, 264],
-  [373, 300], [300, 337], [337, 373], [337, 373], [373, 337], [337, 373],
-  [10, 103], [103, 172], [172, 10], [21, 10], [10, 132], [132, 21]
+  [151, 108], [108, 69], [69, 151], [9, 336], [336, 299], [299, 9],
+  [107, 66], [66, 8], [8, 107], [55, 285], [285, 193], [193, 55],
+  [157, 144], [144, 153], [153, 157], [158, 145], [145, 154], [154, 158],
+  [133, 155], [155, 159], [159, 133], [160, 156], [156, 134], [134, 160],
+  [33, 7], [7, 163], [163, 33], [246, 161], [161, 160], [160, 246],
+  [159, 158], [158, 157], [157, 173], [173, 133], [133, 155], [155, 159]
 ];
