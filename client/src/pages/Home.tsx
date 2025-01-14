@@ -8,46 +8,37 @@ import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
 import aiScanAnimation from "../assets/ai-scan-animation.json";
 import EducationModules from "../components/EducationModules";
+import gsap from "gsap";
 
 export default function Home() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const subheadingRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
-    const initGSAP = async () => {
-      try {
-        const { gsap } = await import('gsap');
-
-        if (headingRef.current && subheadingRef.current) {
-          gsap.fromTo(
-            headingRef.current,
-            { opacity: 0, y: 30 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 1,
-              ease: "power3.out",
-            }
-          );
-
-          gsap.fromTo(
-            subheadingRef.current,
-            { opacity: 0, y: 20 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 1,
-              delay: 0.3,
-              ease: "power3.out",
-            }
-          );
+    if (headingRef.current && subheadingRef.current) {
+      gsap.fromTo(
+        headingRef.current,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: "power3.out",
         }
-      } catch (error) {
-        console.error('Failed to initialize animations:', error);
-      }
-    };
+      );
 
-    initGSAP();
+      gsap.fromTo(
+        subheadingRef.current,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          delay: 0.3,
+          ease: "power3.out",
+        }
+      );
+    }
   }, []);
 
   const CtaButton = ({ className }: { className?: string }) => (
@@ -78,13 +69,13 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="relative z-10 text-center space-y-6 max-w-6xl mx-auto"
           >
-            <h1 
+            <h1
               ref={headingRef}
               className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6"
             >
               Your Skin, Perfected by AI
             </h1>
-            <p 
+            <p
               ref={subheadingRef}
               className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
             >
@@ -93,9 +84,9 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <CtaButton />
               <Link href="/about">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
+                <Button
+                  size="lg"
+                  variant="outline"
                   className="min-h-[48px] px-8 w-full sm:w-auto hover:bg-primary/5 transition-colors duration-300"
                 >
                   Learn More About Our AI
@@ -104,7 +95,7 @@ export default function Home() {
             </div>
 
             {/* Trust Signals */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
@@ -131,7 +122,7 @@ export default function Home() {
               transition={{ delay: 0.3, duration: 0.5 }}
               className="max-w-md mx-auto mt-8"
             >
-              <Lottie 
+              <Lottie
                 animationData={aiScanAnimation}
                 loop
                 className="w-full h-64"
@@ -189,8 +180,8 @@ export default function Home() {
                       <p className="text-muted-foreground mb-4">{solution.description}</p>
                       <div className="mt-auto">
                         <Link href="/analysis">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="w-full hover:bg-primary/5 transition-colors duration-300"
                           >
                             Analyze Your Skin
