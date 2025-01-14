@@ -24,30 +24,38 @@ export default function Navigation() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between">
-          <Link href="/">
-            <Button variant="link" className="p-0 flex items-center gap-2">
-              <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" />
-              <span className="font-bold text-lg">Electrofyne</span>
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Link href="/">
+              <span className="font-bold text-lg cursor-pointer">Electrofyne</span>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             {navigationLinks.map((link) => (
               <Link key={link.href} href={link.href}>
-                <a className={location === link.href ? "text-primary font-medium" : "text-muted-foreground hover:text-primary transition-colors"}>
+                <span className={`cursor-pointer ${
+                  location === link.href 
+                    ? "text-primary font-medium" 
+                    : "text-muted-foreground hover:text-primary transition-colors"
+                }`}>
                   {link.label}
-                </a>
+                </span>
               </Link>
             ))}
             <div className="flex items-center gap-4 pl-4">
               <Link href="/profile">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <User className="h-5 w-5" />
-                </Button>
+                <span className="cursor-pointer">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </span>
               </Link>
               <Link href="/analysis">
-                <Button size="sm" className="min-h-[36px]">Start Analysis</Button>
+                <span className="cursor-pointer">
+                  <Button size="sm" className="min-h-[36px]">Start Analysis</Button>
+                </span>
               </Link>
             </div>
           </nav>
@@ -55,9 +63,11 @@ export default function Navigation() {
           {/* Mobile Navigation */}
           <div className="flex items-center gap-4 md:hidden">
             <Link href="/profile">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <User className="h-5 w-5" />
-              </Button>
+              <span className="cursor-pointer">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <User className="h-5 w-5" />
+                </Button>
+              </span>
             </Link>
             <Sheet>
               <SheetTrigger asChild>
@@ -72,17 +82,19 @@ export default function Navigation() {
                 <nav className="flex flex-col gap-4 mt-6">
                   {navigationLinks.map((link) => (
                     <Link key={link.href} href={link.href}>
-                      <a className={`px-4 py-3 rounded-md transition-colors ${
+                      <span className={`block px-4 py-3 rounded-md transition-colors ${
                         location === link.href
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-muted-foreground hover:bg-accent"
                       }`}>
                         {link.label}
-                      </a>
+                      </span>
                     </Link>
                   ))}
                   <Link href="/analysis">
-                    <Button className="w-full mt-2">Start Analysis</Button>
+                    <span className="block w-full mt-2">
+                      <Button className="w-full">Start Analysis</Button>
+                    </span>
                   </Link>
                 </nav>
               </SheetContent>

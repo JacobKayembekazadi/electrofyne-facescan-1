@@ -1,10 +1,17 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { analyses, users, progressMetrics, achievements, userAchievements, leaderboard, challengeTemplates, userChallenges, errorLogs } from "@db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { differenceInDays, startOfWeek, getWeek, getYear, addDays } from "date-fns";
 import { setTimeout } from "timers/promises";
+
+// Add type for authenticated request
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: number;
+  };
+}
 
 // Add error logging function
 async function logChatError(error: any, userId?: number) {
@@ -274,16 +281,16 @@ export function registerRoutes(app: Express): Server {
       // Format challenges for response
       const formattedChallenges = [
         ...activeChallenges.map(challenge => ({
-          id: challenge.challengeTemplates.id,
-          title: challenge.challengeTemplates.title,
-          description: challenge.challengeTemplates.description,
-          duration: challenge.challengeTemplates.duration,
-          pointsReward: challenge.challengeTemplates.pointsReward,
-          difficulty: challenge.challengeTemplates.difficulty,
-          status: challenge.userChallenges.status,
-          progress: challenge.userChallenges.progress,
-          startDate: challenge.userChallenges.startDate,
-          endDate: challenge.userChallenges.endDate,
+          id: challenge.challenge_templates.id,
+          title: challenge.challenge_templates.title,
+          description: challenge.challenge_templates.description,
+          duration: challenge.challenge_templates.duration,
+          pointsReward: challenge.challenge_templates.pointsReward,
+          difficulty: challenge.challenge_templates.difficulty,
+          status: challenge.user_challenges.status,
+          progress: challenge.user_challenges.progress,
+          startDate: challenge.user_challenges.startDate,
+          endDate: challenge.user_challenges.endDate,
         })),
         ...availableTemplates.map(template => ({
           id: template.id,
@@ -323,6 +330,7 @@ export function registerRoutes(app: Express): Server {
       // Create user challenge
       const startDate = new Date();
       const endDate = addDays(startDate, template.duration);
+      const requirements = template.requirements as { steps: Array<any> };
 
       const [userChallenge] = await db
         .insert(userChallenges)
@@ -332,7 +340,7 @@ export function registerRoutes(app: Express): Server {
           startDate,
           endDate,
           status: 'active',
-          progress: { current: 0, total: template.requirements.steps.length },
+          progress: { current: 0, total: requirements.steps.length },
         })
         .returning();
 
@@ -436,7 +444,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Chat endpoint for skin concerns
-  app.post("/api/chat", async (req, res) => {
+  app.post("/api/chat", async (req: AuthenticatedRequest, res) => {
     try {
       const { messages } = req.body;
 
@@ -454,7 +462,7 @@ export function registerRoutes(app: Express): Server {
         5. Keep responses concise but informative (2-3 paragraphs maximum)
         6. Focus on gathering relevant information about skin conditions
         7. Remind users that their data and photos are secure and will not be shared
-
+        
         For common skin concerns:
 
         1. Pimples/Acne:
