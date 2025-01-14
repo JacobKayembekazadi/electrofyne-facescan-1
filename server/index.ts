@@ -1,5 +1,5 @@
 import express from "express";
-import { createServer } from "http";
+import cors from "cors";
 import { setupVite, serveStatic, log } from "./vite";
 import { registerRoutes } from "./routes";
 
@@ -7,6 +7,10 @@ import { registerRoutes } from "./routes";
 const app = express();
 
 // Basic middleware
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? false : true,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
