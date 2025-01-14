@@ -47,26 +47,29 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            {navigationLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <motion.a
-                  className={cn(
-                    "relative py-1",
-                    location === link.href ? "text-primary font-medium" : "text-muted-foreground hover:text-primary transition-colors"
-                  )}
-                  whileHover={{ y: -1 }}
-                >
-                  {link.label}
-                  {location === link.href && (
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                      layoutId="navIndicator"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </motion.a>
-              </Link>
-            ))}
+            {navigationLinks.map((link) => {
+              const isActive = location === link.href;
+              return (
+                <Link key={link.href} href={link.href}>
+                  <motion.div
+                    className={cn(
+                      "relative py-1 cursor-pointer",
+                      isActive ? "text-primary font-medium" : "text-muted-foreground hover:text-primary transition-colors"
+                    )}
+                    whileHover={{ y: -1 }}
+                  >
+                    {link.label}
+                    {isActive && (
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                        layoutId="navIndicator"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                  </motion.div>
+                </Link>
+              );
+            })}
             <div className="flex items-center gap-4 pl-4 border-l border-primary/10">
               <Link href="/profile">
                 <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-primary/5">
@@ -102,21 +105,24 @@ export default function Navigation() {
                   <SheetTitle className="text-primary">Menu</SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-4 mt-6">
-                  {navigationLinks.map((link) => (
-                    <Link key={link.href} href={link.href}>
-                      <motion.a 
-                        className={`px-4 py-3 rounded-md transition-colors ${
-                          location === link.href
-                            ? "bg-primary/10 text-primary font-medium"
-                            : "text-muted-foreground hover:bg-primary/5"
-                        }`}
-                        whileHover={{ x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {link.label}
-                      </motion.a>
-                    </Link>
-                  ))}
+                  {navigationLinks.map((link) => {
+                    const isActive = location === link.href;
+                    return (
+                      <Link key={link.href} href={link.href}>
+                        <motion.div 
+                          className={`px-4 py-3 rounded-md transition-colors cursor-pointer ${
+                            isActive
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-primary/5"
+                          }`}
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {link.label}
+                        </motion.div>
+                      </Link>
+                    );
+                  })}
                   <Link href="/analysis">
                     <Button className="w-full mt-2 bg-primary/90 hover:bg-primary transition-colors">
                       Start Analysis

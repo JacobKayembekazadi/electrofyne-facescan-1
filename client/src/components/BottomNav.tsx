@@ -23,8 +23,8 @@ export default function BottomNav() {
 
           return (
             <Link key={item.href} href={item.href}>
-              <motion.a
-                className="flex flex-col items-center justify-center w-full h-full group"
+              <motion.div
+                className="flex flex-col items-center justify-center w-full h-full group cursor-pointer"
                 whileTap={{ scale: 0.95 }}
               >
                 <motion.div
@@ -53,7 +53,7 @@ export default function BottomNav() {
                 )}>
                   {item.label}
                 </span>
-              </motion.a>
+              </motion.div>
             </Link>
           );
         })}
