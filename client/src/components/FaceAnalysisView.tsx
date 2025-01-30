@@ -37,12 +37,16 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
   const animationFrameRef = useRef<number>();
 
   useEffect(() => {
+    let isMounted = true;
+
     const initializeModels = async () => {
       try {
         console.log('Initializing TensorFlow.js...');
         await tf.setBackend('webgl');
         await tf.ready();
         console.log('TensorFlow.js initialized');
+
+        if (!isMounted) return;
 
         // Load face detection model
         console.log('Loading face detection model...');
@@ -55,6 +59,8 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
           }
         );
         console.log('Face detection model loaded');
+
+        if (!isMounted) return;
 
         // Load face landmarks model
         console.log('Loading face landmarks model...');
@@ -69,48 +75,39 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
         );
         console.log('Face landmarks model loaded');
 
-        // Initialize face mesh
-        console.log('Initializing face mesh...');
-        faceMeshRef.current = new FaceMesh({
-          locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-          }
-        });
-
-        faceMeshRef.current.setOptions({
-          maxNumFaces: 1,
-          refineLandmarks: true,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
-        });
+        if (!isMounted) return;
 
         // Set up video and camera
         if (videoRef.current) {
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            const constraints = {
               video: {
                 width: 640,
                 height: 480,
                 facingMode: 'user'
               }
-            });
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             videoRef.current.srcObject = stream;
+
+            // Wait for video to be ready
+            await new Promise((resolve) => {
+              if (videoRef.current) {
+                videoRef.current.onloadedmetadata = () => {
+                  resolve(true);
+                };
+              }
+            });
+
             await videoRef.current.play();
             setIsVideoReady(true);
+            console.log('Video ready');
 
-            // Initialize camera
-            console.log('Setting up camera...');
-            cameraRef.current = new Camera(videoRef.current, {
-              onFrame: async () => {
-                await processFrame();
-              },
-              width: 640,
-              height: 480
-            });
+            if (!isMounted) return;
 
-            // Start camera
-            await cameraRef.current.start();
-            console.log('Camera started');
+            // Start processing frames
+            requestAnimationFrame(processFrame);
 
           } catch (err) {
             console.error('Camera access error:', err);
@@ -122,20 +119,17 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
         setIsInitializing(false);
       } catch (err) {
         console.error('Initialization error:', err);
-        setError('Failed to initialize face detection. Please refresh the page.');
-        setIsInitializing(false);
+        if (isMounted) {
+          setError('Failed to initialize face detection. Please refresh the page.');
+          setIsInitializing(false);
+        }
       }
     };
 
     initializeModels();
 
     return () => {
-      if (cameraRef.current) {
-        cameraRef.current.stop();
-      }
-      if (faceMeshRef.current) {
-        faceMeshRef.current.close();
-      }
+      isMounted = false;
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach(track => track.stop());
@@ -150,53 +144,49 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
     if (!videoRef.current || !canvasRef.current || !detectorRef.current || !landmarkModelRef.current) return;
 
     try {
-      // Detect face
-      const faces = await detectorRef.current.estimateFaces(videoRef.current);
-
-      if (faces.length === 0) return;
-
-      const face = faces[0];
-
-      // Get face landmarks
-      const landmarks = await landmarkModelRef.current.estimateFaces(videoRef.current);
-
-      if (landmarks.length === 0) return;
-
-      const faceLandmarks = landmarks[0].keypoints;
-
-      // Draw results
       const ctx = canvasRef.current.getContext('2d');
       if (!ctx) return;
-
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
       // Draw video frame
       ctx.drawImage(videoRef.current, 0, 0);
 
-      // Draw face detection box
-      if (face.box) {
-        ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(face.box.xMin, face.box.yMin, face.box.width, face.box.height);
+      // Detect face
+      const faces = await detectorRef.current.estimateFaces(videoRef.current);
+
+      if (faces.length > 0) {
+        const face = faces[0];
+
+        // Get face landmarks
+        const landmarks = await landmarkModelRef.current.estimateFaces(videoRef.current);
+
+        if (landmarks.length > 0) {
+          const faceLandmarks = landmarks[0].keypoints;
+
+          // Draw face detection box
+          if (face.box) {
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(face.box.xMin, face.box.yMin, face.box.width, face.box.height);
+          }
+
+          // Draw landmarks
+          drawFaceMesh(ctx, faceLandmarks);
+
+          // If analyzing, process skin analysis
+          if (isAnalyzing) {
+            await analyzeSkin(ctx, faceLandmarks);
+          }
+
+          // Draw detected issues
+          drawSkinIssues(ctx);
+        }
       }
 
-      // Draw landmarks
-      drawFaceMesh(ctx, faceLandmarks);
-
-      // If analyzing, process skin analysis
-      if (isAnalyzing) {
-        await analyzeSkin(ctx, faceLandmarks);
-      }
-
-      // Draw detected issues
-      drawSkinIssues(ctx);
-
+      // Request next frame
+      animationFrameRef.current = requestAnimationFrame(processFrame);
     } catch (error) {
       console.error('Frame processing error:', error);
     }
-
-    // Request next frame
-    animationFrameRef.current = requestAnimationFrame(processFrame);
   };
 
   const analyzeSkin = async (ctx: CanvasRenderingContext2D, landmarks: any[]) => {
@@ -462,7 +452,6 @@ export default function FaceAnalysisView({ onAnalysisComplete }: Props) {
   );
 }
 
-// Face mesh connections for visualization
 const FACEMESH_TESSELATION = [
   [127, 34], [34, 139], [139, 127], [11, 0], [0, 37], [37, 11],
   [10, 109], [109, 67], [67, 10], [338, 297], [297, 332], [332, 338],
