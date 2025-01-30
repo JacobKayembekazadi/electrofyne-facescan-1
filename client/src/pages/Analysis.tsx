@@ -4,6 +4,7 @@ import FaceAnalysisView from "../components/FaceAnalysisView";
 import AnalysisResults from "../components/AnalysisResults";
 import ProductRecommendations from "../components/ProductRecommendations";
 import DailySkinTracker from "../components/DailySkinTracker";
+import SocialShare from "../components/SocialShare";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -110,7 +111,7 @@ export default function Analysis() {
 
             {stage === "complete" && results && (
               <div className="space-y-6 sm:space-y-8">
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
                   <Button 
                     onClick={handleReset}
                     variant="outline"
@@ -118,6 +119,7 @@ export default function Analysis() {
                   >
                     New Analysis
                   </Button>
+                  <SocialShare results={results} />
                 </div>
 
                 <AnalysisResults results={results} />
