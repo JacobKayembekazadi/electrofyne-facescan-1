@@ -17,7 +17,9 @@ const SessionStore = MemoryStore(session);
 
 // Basic middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : true,
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || false 
+    : true,
   credentials: true
 }));
 
@@ -27,7 +29,7 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Session middleware
 app.use(session({
-  secret: 'electrofyne-secret',
+  secret: process.env.SESSION_SECRET || 'electrofyne-secret',
   resave: false,
   saveUninitialized: false,
   store: new SessionStore({
@@ -52,18 +54,42 @@ app.use((req, res, next) => {
 });
 
 // API health check route
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "healthy" });
+app.get("/api/health", async (_req, res) => {
+  try {
+    // Test database connection if available
+    const dbHealth = process.env.DATABASE_URL ? "connected" : "not configured";
+    
+    res.json({ 
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      database: dbHealth,
+      environment: process.env.NODE_ENV || "development"
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: "unhealthy", 
+      error: "Database connection failed" 
+    });
+  }
 });
 
 // Register API routes
 registerRoutes(app);
 
 // Error handling middleware
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error("Server error:", err);
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Server error:", {
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    url: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+  
   res.status(500).json({
-    message: "Internal server error",
+    message: process.env.NODE_ENV === 'production' 
+      ? "Internal server error" 
+      : err.message,
   });
 });
 
