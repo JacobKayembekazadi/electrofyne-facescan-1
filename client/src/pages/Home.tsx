@@ -1,284 +1,223 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { ScanLine, Shield, Sparkles, Camera, Users, Award, Star } from "lucide-react";
+import { 
+  Scan, 
+  Sparkles, 
+  Camera, 
+  TrendingUp, 
+  Award, 
+  ArrowRight,
+  Sun,
+  Droplets,
+  Shield
+} from "lucide-react";
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
-import Lottie from "lottie-react";
-import aiScanAnimation from "../assets/ai-scan-animation.json";
-import EducationModules from "../components/EducationModules";
-import gsap from "gsap";
 
 export default function Home() {
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const subheadingRef = useRef<HTMLParagraphElement>(null);
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 }
+  };
 
-  useEffect(() => {
-    if (headingRef.current && subheadingRef.current) {
-      gsap.fromTo(
-        headingRef.current,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: "power3.out",
-        }
-      );
-
-      gsap.fromTo(
-        subheadingRef.current,
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          delay: 0.3,
-          ease: "power3.out",
-        }
-      );
+  const staggerChildren = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
     }
-  }, []);
-
-  const CtaButton = ({ className }: { className?: string }) => (
-    <Link href="/analysis">
-      <Button
-        size="lg"
-        className={cn(
-          "min-h-[48px] px-8 w-full sm:w-auto relative overflow-hidden transition-all duration-300",
-          "before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/20 before:to-primary/0 before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-500",
-          "hover:scale-105 hover:shadow-lg",
-          className
-        )}
-      >
-        Start Free Analysis
-      </Button>
-    </Link>
-  );
+  };
 
   return (
-    <div className="w-full mb-16 md:mb-0">
-      {/* Hero Section with Glassmorphism */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5 backdrop-blur-xl" />
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="relative z-10 text-center space-y-6 max-w-6xl mx-auto"
+    <div className="flex flex-col min-h-full bg-gradient-to-b from-white to-slate-50">
+      {/* Header with gradient */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-8">
+        <motion.div 
+          className="text-center"
+          variants={staggerChildren}
+          initial="initial"
+          animate="animate"
+        >
+          <motion.div variants={fadeInUp} className="mb-4">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+          </motion.div>
+          
+          <motion.h1 
+            variants={fadeInUp}
+            className="text-2xl font-bold mb-2"
           >
-            <h1
-              ref={headingRef}
-              className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-6"
-            >
-              Your Skin, Perfected by AI
-            </h1>
-            <p
-              ref={subheadingRef}
-              className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto"
-            >
-              Advanced skin analysis for personalized care at your fingertips
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <CtaButton />
-              <Link href="/about">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="min-h-[48px] px-8 w-full sm:w-auto hover:bg-primary/5 transition-colors duration-300"
-                >
-                  Learn More About Our AI
+            ElectroFyne AI
+          </motion.h1>
+          
+          <motion.p 
+            variants={fadeInUp}
+            className="text-blue-100 opacity-90"
+          >
+            Your personal skin health companion
+          </motion.p>
+        </motion.div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="px-4 -mt-6 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="shadow-lg border-0 bg-white">
+            <CardContent className="p-6">
+              <Link href="/analysis">
+                <Button className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg">
+                  <Camera className="w-5 h-5 mr-3" />
+                  <div className="text-left">
+                    <div className="font-semibold">Start Skin Analysis</div>
+                    <div className="text-xs opacity-90">Get instant AI insights</div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 ml-auto" />
                 </Button>
               </Link>
-            </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-            {/* Trust Signals */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="flex flex-wrap justify-center gap-8 mt-12"
-            >
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">10K+ Happy Users</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">98% Satisfaction Rate</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Leading AI Technology</span>
-              </div>
-            </motion.div>
-
-            {/* AI Scan Animation */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="max-w-md mx-auto mt-8"
-            >
-              <Lottie
-                animationData={aiScanAnimation}
-                loop
-                className="w-full h-64"
-              />
-            </motion.div>
+      {/* Stats Cards */}
+      <div className="px-4 mb-6">
+        <motion.div
+          variants={staggerChildren}
+          initial="initial"
+          animate="animate"
+          className="grid grid-cols-3 gap-3"
+        >
+          <motion.div variants={fadeInUp}>
+            <Card className="border-0 bg-gradient-to-br from-blue-50 to-blue-100">
+              <CardContent className="p-4 text-center">
+                <TrendingUp className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <div className="text-xl font-bold text-blue-900">94%</div>
+                <div className="text-xs text-blue-700">Accuracy</div>
+              </CardContent>
+            </Card>
           </motion.div>
-        </div>
-      </section>
+          
+          <motion.div variants={fadeInUp}>
+            <Card className="border-0 bg-gradient-to-br from-green-50 to-green-100">
+              <CardContent className="p-4 text-center">
+                <Award className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                <div className="text-xl font-bold text-green-900">15k+</div>
+                <div className="text-xs text-green-700">Happy Users</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div variants={fadeInUp}>
+            <Card className="border-0 bg-gradient-to-br from-purple-50 to-purple-100">
+              <CardContent className="p-4 text-center">
+                <Scan className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                <div className="text-xl font-bold text-purple-900">2s</div>
+                <div className="text-xs text-purple-700">Analysis Time</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
+      </div>
 
-      {/* Tailored Solutions Section with Card Hover Effects */}
-      <section className="py-16 bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Tailored Skincare Solutions</h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Every skin type has unique needs. Our AI adapts to yours.
+      {/* Features */}
+      <div className="px-4 mb-6">
+        <motion.h2 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-lg font-semibold text-gray-900 mb-4"
+        >
+          Why Choose ElectroFyne?
+        </motion.h2>
+        
+        <motion.div
+          variants={staggerChildren}
+          initial="initial"
+          animate="animate"
+          className="space-y-3"
+        >
+          <motion.div variants={fadeInUp}>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Droplets className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Hydration Analysis</div>
+                    <div className="text-sm text-gray-500">Track your skin's moisture levels</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={fadeInUp}>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Sun className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">UV Protection</div>
+                    <div className="text-sm text-gray-500">Personalized sun care recommendations</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={fadeInUp}>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">AI-Powered Insights</div>
+                    <div className="text-sm text-gray-500">Advanced machine learning analysis</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="px-4 pb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="border-0 bg-gradient-to-r from-slate-50 to-slate-100">
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="w-6 h-6 text-gray-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">Ready to Start?</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Begin your personalized skin health journey today
               </p>
-              <CtaButton />
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              {[
-                {
-                  title: "Acne-Prone Skin",
-                  description: "Advanced analysis to identify triggers and recommend targeted treatments",
-                  icon: ScanLine,
-                },
-                {
-                  title: "Anti-Aging Care",
-                  description: "Track and improve skin elasticity with personalized routines",
-                  icon: Shield,
-                },
-                {
-                  title: "Hydration Balance",
-                  description: "Measure and optimize your skin's moisture levels",
-                  icon: Sparkles,
-                },
-                {
-                  title: "Sensitive Skin",
-                  description: "Gentle recommendations tailored to your skin's needs",
-                  icon: Camera,
-                },
-              ].map((solution, index) => (
-                <motion.div
-                  key={solution.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <Card className="h-full bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-xl transition-all duration-300 border-opacity-50 hover:border-opacity-100">
-                    <CardContent className="p-6 flex flex-col">
-                      <solution.icon className="w-10 h-10 text-primary mb-4" />
-                      <h3 className="text-xl font-semibold mb-2">{solution.title}</h3>
-                      <p className="text-muted-foreground mb-4">{solution.description}</p>
-                      <div className="mt-auto">
-                        <Link href="/analysis">
-                          <Button
-                            variant="outline"
-                            className="w-full hover:bg-primary/5 transition-colors duration-300"
-                          >
-                            Analyze Your Skin
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof Section */}
-      <section className="py-16 bg-primary/5">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Join Thousands of Happy Users</h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Experience the transformation yourself
-            </p>
-            <div className="mb-12">
-              <CtaButton />
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  quote: "Can we just say... you're glowing and growing!",
-                  author: "Sarah M.",
-                  role: "Skincare Enthusiast",
-                },
-                {
-                  quote: "Expert results, AI precision, and you at the center of it all.",
-                  author: "Dr. James L.",
-                  role: "Dermatologist",
-                },
-                {
-                  quote: "Every skin type, every story—Electrofyne is here for you.",
-                  author: "Michelle K.",
-                  role: "Beauty Blogger",
-                },
-              ].map((testimonial, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="h-full">
-                    <CardContent className="p-6 text-center">
-                      <div className="mb-4">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 text-yellow-400 inline-block" />
-                        ))}
-                      </div>
-                      <p className="text-lg mb-4 italic">"{testimonial.quote}"</p>
-                      <div>
-                        <p className="font-semibold">{testimonial.author}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Education Modules Section */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <CtaButton />
-            </div>
-            <EducationModules />
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-16 text-center">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-6">
-              Ready to Transform Your Skincare Journey?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Join the future of personalized skincare. Start your analysis today and discover the power of AI-driven beauty.
-            </p>
-            <CtaButton />
-          </div>
-        </div>
-      </section>
+              <Link href="/analysis">
+                <Button variant="outline" size="sm" className="border-gray-300">
+                  Get Started
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

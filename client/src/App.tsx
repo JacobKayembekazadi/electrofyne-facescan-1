@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Products from "./pages/Products";
 import Education from "./pages/Education";
 import Analysis from "./pages/Analysis";
+import Profile from "./pages/Profile";
 
 function NotFound() {
   return (
@@ -30,20 +31,30 @@ function NotFound() {
 
 function App() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navigation />
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/about" component={About} />
-          <Route path="/products" component={Products} />
-          <Route path="/education" component={Education} />
-          <Route path="/analysis" component={Analysis} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <Footer />
-      <BottomNav />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col relative overflow-hidden">
+      {/* Mobile app container with safe areas */}
+      <div className="flex-1 flex flex-col max-w-sm mx-auto w-full bg-white shadow-xl relative">
+        {/* Status bar spacer */}
+        <div className="h-safe-top bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+        
+        {/* Main content area */}
+        <main className="flex-1 overflow-y-auto pb-20">
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/about" component={About} />
+            <Route path="/products" component={Products} />
+            <Route path="/education" component={Education} />
+            <Route path="/analysis" component={Analysis} />
+            <Route path="/profile" component={Profile} />
+            <Route component={NotFound} />
+          </Switch>
+        </main>
+        
+        {/* Fixed bottom navigation */}
+        <BottomNav />
+      </div>
+      
+      {/* Remove desktop navigation and footer for mobile app feel */}
     </div>
   );
 }

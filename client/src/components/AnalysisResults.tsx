@@ -19,6 +19,8 @@ import {
   Sun,  // Pigmentation
   Circle,  // Pores
   Activity,  // Overall health
+  Bot,  // AI analysis
+  Camera  // Manual analysis
 } from "lucide-react";
 
 interface HealthScore {
@@ -97,9 +99,21 @@ export default function AnalysisResults({ results }: AnalysisResultsProps) {
           <CardTitle className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-primary" />
             Overall Skin Health
+            {results.aiAnalysis !== false && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Bot className="w-4 h-4 text-green-600" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Analyzed using AI technology</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </CardTitle>
           <CardDescription>
-            Based on multiple factors and advanced analysis
+            Based on multiple factors and {results.aiAnalysis !== false ? 'AI-powered' : 'comprehensive'} analysis
           </CardDescription>
         </CardHeader>
         <CardContent>
